@@ -1,0 +1,38 @@
+name: Release
+
+# Releases are cut by pushing a SemVer tag (e.g. v0.1.0). Ordinary commits
+# and branch pushes do NOT match this trigger.
+on:
+  push:
+    tags:
+      - "v*"
+
+# Least-privilege: building artifacts only needs read access. Publishing to a
+# package index (PyPI via OIDC) would add `id-token: write` here later.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build versioned artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # hatch-vcs derives the version from the pushed tag; need history+tags.
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.ref_name }}
+          path: dist/*
+          if-no-files-found: error
