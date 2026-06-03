@@ -57,3 +57,25 @@ def test_out_of_range_port_is_rejected() -> None:
 def test_invalid_log_level_is_rejected() -> None:
     with pytest.raises(ConfigError, match="log level"):
         from_env({"YNAB_CONNECTOR_LOG_LEVEL": "VERBOSE"})
+
+
+def test_ynab_defaults_for_empty_environment() -> None:
+    config = from_env({})
+    assert config.ynab_token is None
+    assert config.ynab_api_base_url == "https://api.ynab.com/v1"
+
+
+def test_ynab_environment_overrides_are_applied() -> None:
+    config = from_env(
+        {
+            "YNAB_TOKEN": "secret-token-value",
+            "YNAB_API_BASE_URL": "https://example.test/v1",
+        }
+    )
+    assert config.ynab_token == "secret-token-value"
+    assert config.ynab_api_base_url == "https://example.test/v1"
+
+
+def test_ynab_token_is_not_exposed_in_repr() -> None:
+    config = from_env({"YNAB_TOKEN": "super-secret-token"})
+    assert "super-secret-token" not in repr(config)

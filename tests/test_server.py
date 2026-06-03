@@ -24,6 +24,25 @@ def test_build_server_returns_fastmcp_with_ping_registered() -> None:
     assert "ping" in _tool_names(server)
 
 
+def test_build_server_registers_all_tools() -> None:
+    server = build_server(_CONFIG)
+    names = set(_tool_names(server))
+    assert names == {
+        "ping",
+        "list_budgets",
+        "list_accounts",
+        "list_categories",
+        "list_transactions",
+    }
+
+
+def test_all_tools_have_typed_input_schemas() -> None:
+    server = build_server(_CONFIG)
+    tools = asyncio.run(server.list_tools())
+    for tool in tools:
+        assert tool.inputSchema is not None
+
+
 def test_ping_tool_has_input_schema_from_type_hints() -> None:
     server = build_server(_CONFIG)
     tools = asyncio.run(server.list_tools())
