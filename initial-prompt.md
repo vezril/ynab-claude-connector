@@ -28,6 +28,7 @@ Features (minimal, more features to be added later, this is just to get started)
 2. Basic Python Project that can be built through CICD, no YNAB features yet
 3. Build the basic integration into YNAB (Auth for a YNAB single user, GET queries for example)
    - YNAB Credentials are to be stored locally, and NEVER in any capacity find itself on git
+4. Implementation of all endpoints under the "User" Category.
 
 More features to come.
 
