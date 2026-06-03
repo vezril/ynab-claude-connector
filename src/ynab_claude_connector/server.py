@@ -15,6 +15,8 @@ from mcp.server.fastmcp import FastMCP
 from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.tools import ping
 from ynab_claude_connector.ynab.tools import (
+    get_category,
+    get_month_category,
     get_plan,
     get_plan_settings,
     get_user,
@@ -35,6 +37,8 @@ _TOOLS: Final = (
     get_plan_settings,
     list_accounts,
     list_categories,
+    get_category,
+    get_month_category,
     list_transactions,
 )
 

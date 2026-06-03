@@ -151,6 +151,71 @@ def test_get_plan_settings_returns_settings_default_alias() -> None:
     assert captured["path"] == "/v1/plans/last-used/settings"
 
 
+_CATEGORY_RESPONSE = {
+    "data": {
+        "category": {
+            "id": "c1",
+            "name": "Rent",
+            "category_group_id": "g1",
+            "budgeted": 100,
+            "activity": -50,
+            "balance": 50,
+        }
+    }
+}
+
+
+def test_get_category_path_and_parse() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        return httpx.Response(200, json=_CATEGORY_RESPONSE)
+
+    async def run() -> str:
+        async with _client(handler) as client:
+            return (await client.get_category("c1")).name
+
+    assert asyncio.run(run()) == "Rent"
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/categories/c1"
+
+
+def test_get_month_category_path() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        return httpx.Response(200, json=_CATEGORY_RESPONSE)
+
+    async def run_iso() -> None:
+        async with _client(handler) as client:
+            await client.get_month_category("2026-06-01", "c1")
+
+    asyncio.run(run_iso())
+    assert captured["path"] == "/v1/plans/last-used/months/2026-06-01/categories/c1"
+
+    async def run_current() -> None:
+        async with _client(handler) as client:
+            await client.get_month_category("current", "c1")
+
+    asyncio.run(run_current())
+    assert captured["path"] == "/v1/plans/last-used/months/current/categories/c1"
+
+
+def test_get_category_404_maps_to_api_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "not found"}})
+
+    async def run() -> None:
+        async with _client(handler) as client:
+            await client.get_category("missing")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run())
+
+
 def test_explicit_plan_id_is_used() -> None:
     captured: dict[str, str] = {}
 

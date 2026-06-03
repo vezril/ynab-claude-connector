@@ -25,6 +25,7 @@ from ynab_claude_connector.ynab.models import (
     User,
     parse_accounts,
     parse_categories,
+    parse_category,
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
@@ -81,6 +82,20 @@ class YnabClient:
         self, plan_id: str = _DEFAULT_PLAN
     ) -> tuple[Category, ...]:
         return parse_categories(await self._get(f"plans/{plan_id}/categories"))
+
+    async def get_category(
+        self, category_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> Category:
+        return parse_category(
+            await self._get(f"plans/{plan_id}/categories/{category_id}")
+        )
+
+    async def get_month_category(
+        self, month: str, category_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> Category:
+        return parse_category(
+            await self._get(f"plans/{plan_id}/months/{month}/categories/{category_id}")
+        )
 
     async def list_transactions(
         self, plan_id: str = _DEFAULT_PLAN

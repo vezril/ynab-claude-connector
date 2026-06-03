@@ -131,6 +131,8 @@ ynab-claude-connector
 | `get_plan_settings` | `plan_id` (default `last-used`)    | The plan's date and currency format                  |
 | `list_accounts`     | `plan_id` (default `last-used`)    | Accounts with balances                               |
 | `list_categories`   | `plan_id` (default `last-used`)    | Categories with budgeted/activity/balance            |
+| `get_category`      | `category_id`, `plan_id` (default `last-used`) | A single category by id                  |
+| `get_month_category`| `month`, `category_id`, `plan_id` (default `last-used`) | A category's values for a month (`month` accepts `current` or `YYYY-MM-01`) |
 | `list_transactions` | `plan_id` (default `last-used`)    | Transactions (date, amount, payee, category, memo)   |
 
 > **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
@@ -212,8 +214,9 @@ Notes:
 
 Fully quit and reopen it (the config is read at startup). The connector then appears in the
 tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_settings`,
-`list_accounts`, `list_categories`, and `list_transactions`. Try asking *"List my YNAB
-plans"* or *"What are my account balances?"*.
+`list_accounts`, `list_categories`, `get_category`, `get_month_category`, and
+`list_transactions`. Try asking *"List my YNAB plans"* or *"What are my account
+balances?"*.
 
 ### Troubleshooting
 
