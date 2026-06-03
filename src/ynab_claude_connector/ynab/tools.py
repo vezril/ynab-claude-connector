@@ -15,6 +15,7 @@ from ynab_claude_connector.ynab.client import client_from_env
 from ynab_claude_connector.ynab.models import (
     Account,
     Category,
+    Payee,
     Plan,
     PlanDetailSummary,
     PlanSettings,
@@ -77,6 +78,18 @@ async def get_month_category(
     """Return a category's values for a month (`current` or an ISO `YYYY-MM-01`)."""
     async with client_from_env(_config()) as client:
         return await client.get_month_category(month, category_id, plan_id)
+
+
+async def list_payees(plan_id: str = _DEFAULT_PLAN) -> tuple[Payee, ...]:
+    """List payees for a plan (defaults to last-used)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_payees(plan_id)
+
+
+async def get_payee(payee_id: str, plan_id: str = _DEFAULT_PLAN) -> Payee:
+    """Return a single payee by id (defaults to the last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_payee(payee_id, plan_id)
 
 
 async def list_transactions(

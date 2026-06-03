@@ -165,6 +165,51 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_list_payees_path_and_parse() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        return httpx.Response(
+            200,
+            json={"data": {"payees": [{"id": "py1", "name": "Market"}]}},
+        )
+
+    async def run() -> str:
+        async with _client(handler) as client:
+            return (await client.list_payees())[0].name
+
+    assert asyncio.run(run()) == "Market"
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/payees"
+
+
+def test_get_payee_path_and_404() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        return httpx.Response(200, json={"data": {"payee": {"id": "py1", "name": "M"}}})
+
+    async def run() -> str:
+        async with _client(handler) as client:
+            return (await client.get_payee("py1")).id
+
+    assert asyncio.run(run()) == "py1"
+    assert captured["path"] == "/v1/plans/last-used/payees/py1"
+
+    def handler_404(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run_404() -> None:
+        async with _client(handler_404) as client:
+            await client.get_payee("missing")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run_404())
+
+
 def test_get_category_path_and_parse() -> None:
     captured: dict[str, str] = {}
 

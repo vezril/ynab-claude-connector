@@ -197,6 +197,38 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_list_payees_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch,
+        lambda r: httpx.Response(
+            200, json={"data": {"payees": [{"id": "py1", "name": "Market"}]}}
+        ),
+    )
+    payees = asyncio.run(tools.list_payees())
+    assert payees[0].name == "Market"
+    assert captured["path"] == "/v1/plans/last-used/payees"
+
+
+def test_get_payee_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch,
+        lambda r: httpx.Response(
+            200, json={"data": {"payee": {"id": "py1", "name": "Market"}}}
+        ),
+    )
+    payee = asyncio.run(tools.get_payee("py1"))
+    assert payee.id == "py1"
+    assert captured["path"] == "/v1/plans/last-used/payees/py1"
+
+
+def test_payee_tools_without_token_raise(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_payees())
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_payee("py1"))
+
+
 def test_get_category_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     captured = _patch_client(
         monkeypatch, lambda r: httpx.Response(200, json=_CATEGORY_RESPONSE)

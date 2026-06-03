@@ -8,6 +8,8 @@ from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
     parse_category,
+    parse_payee,
+    parse_payees,
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
@@ -98,6 +100,57 @@ def test_parse_accounts_keeps_milliunits() -> None:
     assert account.on_budget is True
     assert account.closed is False
     assert account.balance == 123450  # milliunits, unchanged
+
+
+def test_parse_payees() -> None:
+    payees = parse_payees(
+        {
+            "data": {
+                "payees": [
+                    {
+                        "id": "py1",
+                        "name": "Market",
+                        "transfer_account_id": None,
+                        "deleted": False,
+                    },
+                    {
+                        "id": "py2",
+                        "name": "Transfer",
+                        "transfer_account_id": "a9",
+                        "deleted": False,
+                    },
+                ]
+            }
+        }
+    )
+    assert [(p.id, p.name, p.transfer_account_id) for p in payees] == [
+        ("py1", "Market", None),
+        ("py2", "Transfer", "a9"),
+    ]
+
+
+def test_parse_payee_single() -> None:
+    payee = parse_payee(
+        {"data": {"payee": {"id": "py1", "name": "Market", "deleted": True}}}
+    )
+    assert payee.id == "py1"
+    assert payee.name == "Market"
+    assert payee.transfer_account_id is None
+    assert payee.deleted is True
+
+
+def test_parse_payees_empty_and_partial() -> None:
+    assert parse_payees({"data": {"payees": []}}) == ()
+    payee = parse_payees({"data": {"payees": [{"id": "p", "name": "n"}]}})[0]
+    assert payee.transfer_account_id is None
+    assert payee.deleted is False
+
+
+def test_parse_payee_missing_fields_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_payee({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_payee({"data": {"payee": {}}})
 
 
 def test_parse_category_single() -> None:

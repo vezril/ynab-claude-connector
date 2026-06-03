@@ -18,6 +18,7 @@ from ynab_claude_connector.ynab.errors import YnabAuthError, error_from_response
 from ynab_claude_connector.ynab.models import (
     Account,
     Category,
+    Payee,
     Plan,
     PlanDetailSummary,
     PlanSettings,
@@ -26,6 +27,8 @@ from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
     parse_category,
+    parse_payee,
+    parse_payees,
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
@@ -96,6 +99,12 @@ class YnabClient:
         return parse_category(
             await self._get(f"plans/{plan_id}/months/{month}/categories/{category_id}")
         )
+
+    async def list_payees(self, plan_id: str = _DEFAULT_PLAN) -> tuple[Payee, ...]:
+        return parse_payees(await self._get(f"plans/{plan_id}/payees"))
+
+    async def get_payee(self, payee_id: str, plan_id: str = _DEFAULT_PLAN) -> Payee:
+        return parse_payee(await self._get(f"plans/{plan_id}/payees/{payee_id}"))
 
     async def list_transactions(
         self, plan_id: str = _DEFAULT_PLAN
