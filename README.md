@@ -4,9 +4,9 @@ A [Claude connector](https://claude.com/docs/connectors/building) that integrate
 [YNAB (You Need A Budget)](https://api.ynab.com/) so you can get insights into your budget
 through Claude.
 
-> **Status:** Foundation only. This first release is the buildable, tested, CI-backed
-> Python skeleton — there is no YNAB or Claude integration code yet. Those features land
-> in subsequent changes.
+> **Status:** Working MCP connector with read-only YNAB access (budgets, accounts,
+> categories, transactions) over the default `stdio` transport. Remote hosting (OAuth +
+> HTTPS) and write operations are planned for later changes.
 
 ---
 
@@ -141,6 +141,79 @@ connector surfaces as a clear rate-limit error.
 
 > **Not yet included:** OAuth, write/mutating operations, and incremental delta sync — these
 > are planned for later changes.
+
+## Use with Claude Desktop
+
+Claude Desktop can launch this connector as a **local MCP server** over the default `stdio`
+transport. (Claude.ai's *web* "Custom Connectors" require a remote HTTPS URL with OAuth —
+not covered here.)
+
+### 1. Open the config file
+
+In Claude Desktop: **Settings → Developer → Edit Config**. This opens (creating it if
+needed):
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+### 2. Add the connector
+
+Point `command` at an absolute path to the installed console script, and pass your YNAB
+token via the `env` block:
+
+```json
+{
+  "mcpServers": {
+    "ynab": {
+      "command": "/absolute/path/to/ynab-claude-connector/.venv/bin/ynab-claude-connector",
+      "env": {
+        "YNAB_TOKEN": "your-personal-access-token"
+      }
+    }
+  }
+}
+```
+
+Equivalent form using the module instead of the console script:
+
+```json
+{
+  "mcpServers": {
+    "ynab": {
+      "command": "/absolute/path/to/ynab-claude-connector/.venv/bin/python",
+      "args": ["-m", "ynab_claude_connector"],
+      "env": { "YNAB_TOKEN": "your-personal-access-token" }
+    }
+  }
+}
+```
+
+Notes:
+
+- **No `args`/transport needed** for the first form — `stdio` is the default and is exactly
+  what Claude Desktop expects.
+- The **token goes in the `env` block**, not your shell — Desktop launches the process
+  itself and won't inherit your terminal environment.
+- **Use absolute paths.** Desktop doesn't run inside your virtualenv or the repo directory,
+  so a bare `ynab-claude-connector`/`python` usually won't resolve.
+- If you already have other servers, add the `"ynab"` key inside the existing `mcpServers`
+  object.
+
+### 3. Restart Claude Desktop
+
+Fully quit and reopen it (the config is read at startup). The connector then appears in the
+tools menu, exposing `ping`, `list_budgets`, `list_accounts`, `list_categories`, and
+`list_transactions`. Try asking *"List my YNAB budgets"* or *"What are my account
+balances?"*.
+
+### Troubleshooting
+
+- `ping` works without a token — use it as a first connectivity test. A missing token
+  surfaces as a clear authentication error only when a YNAB tool runs.
+- Check Desktop's MCP logs if the server doesn't load: `~/Library/Logs/Claude/mcp*.log`
+  (macOS).
+- The package must remain installed in the referenced environment
+  (`pip install -e ".[dev]"`).
 
 ## Project layout
 
