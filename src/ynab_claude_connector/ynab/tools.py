@@ -14,13 +14,15 @@ from ynab_claude_connector.config import ServerConfig, from_env
 from ynab_claude_connector.ynab.client import client_from_env
 from ynab_claude_connector.ynab.models import (
     Account,
-    Budget,
     Category,
+    Plan,
+    PlanDetailSummary,
+    PlanSettings,
     Transaction,
     User,
 )
 
-_DEFAULT_BUDGET = "default"
+_DEFAULT_PLAN = "last-used"
 
 
 def _config() -> ServerConfig:
@@ -33,27 +35,39 @@ async def get_user() -> User:
         return await client.get_user()
 
 
-async def list_budgets() -> tuple[Budget, ...]:
-    """List the user's YNAB budgets (ids and names)."""
+async def list_plans() -> tuple[Plan, ...]:
+    """List the user's YNAB plans (ids and names)."""
     async with client_from_env(_config()) as client:
-        return await client.list_budgets()
+        return await client.list_plans()
 
 
-async def list_accounts(budget_id: str = _DEFAULT_BUDGET) -> tuple[Account, ...]:
-    """List accounts (with milliunit balances) for a budget (defaults to last-used)."""
+async def get_plan(plan_id: str = _DEFAULT_PLAN) -> PlanDetailSummary:
+    """Return a curated summary of a plan: metadata, formats, and entity counts."""
     async with client_from_env(_config()) as client:
-        return await client.list_accounts(budget_id)
+        return await client.get_plan(plan_id)
 
 
-async def list_categories(budget_id: str = _DEFAULT_BUDGET) -> tuple[Category, ...]:
-    """List budget categories for a budget (defaults to last-used)."""
+async def get_plan_settings(plan_id: str = _DEFAULT_PLAN) -> PlanSettings:
+    """Return a plan's date and currency format (defaults to last-used)."""
     async with client_from_env(_config()) as client:
-        return await client.list_categories(budget_id)
+        return await client.get_plan_settings(plan_id)
+
+
+async def list_accounts(plan_id: str = _DEFAULT_PLAN) -> tuple[Account, ...]:
+    """List accounts (with milliunit balances) for a plan (defaults to last-used)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_accounts(plan_id)
+
+
+async def list_categories(plan_id: str = _DEFAULT_PLAN) -> tuple[Category, ...]:
+    """List plan categories for a plan (defaults to last-used)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_categories(plan_id)
 
 
 async def list_transactions(
-    budget_id: str = _DEFAULT_BUDGET,
+    plan_id: str = _DEFAULT_PLAN,
 ) -> tuple[Transaction, ...]:
-    """List transactions for a budget (defaults to last-used)."""
+    """List transactions for a plan (defaults to last-used)."""
     async with client_from_env(_config()) as client:
-        return await client.list_transactions(budget_id)
+        return await client.list_transactions(plan_id)

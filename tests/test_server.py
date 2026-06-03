@@ -30,7 +30,9 @@ def test_build_server_registers_all_tools() -> None:
     assert names == {
         "ping",
         "get_user",
-        "list_budgets",
+        "list_plans",
+        "get_plan",
+        "get_plan_settings",
         "list_accounts",
         "list_categories",
         "list_transactions",

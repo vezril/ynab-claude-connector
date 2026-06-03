@@ -123,17 +123,25 @@ ynab-claude-connector
 
 ### Tools
 
-| Tool                | Arguments                       | Returns                                              |
-| ------------------- | ------------------------------- | ---------------------------------------------------- |
-| `get_user`          | _(none)_                        | The authenticated user's id                          |
-| `list_budgets`      | _(none)_                        | Your budgets (id, name)                              |
-| `list_accounts`     | `budget_id` (default `default`) | Accounts with balances                               |
-| `list_categories`   | `budget_id` (default `default`) | Categories with budgeted/activity/balance            |
-| `list_transactions` | `budget_id` (default `default`) | Transactions (date, amount, payee, category, memo)   |
+| Tool                | Arguments                          | Returns                                              |
+| ------------------- | ---------------------------------- | ---------------------------------------------------- |
+| `get_user`          | _(none)_                           | The authenticated user's id                          |
+| `list_plans`        | _(none)_                           | Your plans (id, name)                                |
+| `get_plan`          | `plan_id` (default `last-used`)    | Plan summary: metadata, currency/date format, entity counts |
+| `get_plan_settings` | `plan_id` (default `last-used`)    | The plan's date and currency format                  |
+| `list_accounts`     | `plan_id` (default `last-used`)    | Accounts with balances                               |
+| `list_categories`   | `plan_id` (default `last-used`)    | Categories with budgeted/activity/balance            |
+| `list_transactions` | `plan_id` (default `last-used`)    | Transactions (date, amount, payee, category, memo)   |
 
-`budget_id` defaults to YNAB's `default` alias (your last-used budget), so you usually don't
-need to know your budget id. Monetary values are returned in YNAB **milliunits** (integers,
-e.g. `123450` = `$123.45`) with no lossy currency conversion.
+> **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
+> so the tools use plan terminology (`list_plans`, `plan_id`). `plan_id` defaults to YNAB's
+> `last-used` alias (your most recently used plan), so you usually don't need to know your
+> plan id.
+
+`get_plan` returns a **summary** (counts of accounts/categories/transactions/etc.), not the
+full export, to stay within tool-result limits — use the `list_*` tools for the detail.
+Monetary values are returned in YNAB **milliunits** (integers, e.g. `123450` = `$123.45`)
+with no lossy currency conversion.
 
 ### Rate limits
 
@@ -203,9 +211,9 @@ Notes:
 ### 3. Restart Claude Desktop
 
 Fully quit and reopen it (the config is read at startup). The connector then appears in the
-tools menu, exposing `ping`, `get_user`, `list_budgets`, `list_accounts`,
-`list_categories`, and `list_transactions`. Try asking *"List my YNAB budgets"* or *"What
-are my account balances?"*.
+tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_settings`,
+`list_accounts`, `list_categories`, and `list_transactions`. Try asking *"List my YNAB
+plans"* or *"What are my account balances?"*.
 
 ### Troubleshooting
 

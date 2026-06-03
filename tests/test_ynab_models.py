@@ -6,15 +6,17 @@ import pytest
 
 from ynab_claude_connector.ynab.models import (
     parse_accounts,
-    parse_budgets,
     parse_categories,
+    parse_plan_detail_summary,
+    parse_plan_settings,
+    parse_plans,
     parse_transactions,
     parse_user,
 )
 
-BUDGETS_PAYLOAD = {
+PLANS_PAYLOAD = {
     "data": {
-        "budgets": [
+        "plans": [
             {"id": "b1", "name": "My Budget"},
             {"id": "b2", "name": "Side Budget"},
         ]
@@ -77,8 +79,8 @@ TRANSACTIONS_PAYLOAD = {
 }
 
 
-def test_parse_budgets() -> None:
-    budgets = parse_budgets(BUDGETS_PAYLOAD)
+def test_parse_plans() -> None:
+    budgets = parse_plans(PLANS_PAYLOAD)
     assert [(b.id, b.name) for b in budgets] == [
         ("b1", "My Budget"),
         ("b2", "Side Budget"),
@@ -122,6 +124,107 @@ def test_parse_transactions() -> None:
     assert txn.account_id == "a1"
 
 
+PLAN_DETAIL_PAYLOAD = {
+    "data": {
+        "plan": {
+            "id": "p1",
+            "name": "My Plan",
+            "last_modified_on": "2026-06-01T00:00:00Z",
+            "first_month": "2025-01-01",
+            "last_month": "2026-06-01",
+            "currency_format": {
+                "iso_code": "USD",
+                "decimal_digits": 2,
+                "decimal_separator": ".",
+                "symbol_first": True,
+                "group_separator": ",",
+                "currency_symbol": "$",
+                "display_symbol": True,
+                "example_format": "123,456.78",
+            },
+            "date_format": {"format": "MM/DD/YYYY"},
+            "accounts": [{"id": "a1"}, {"id": "a2"}],
+            "category_groups": [{"id": "g1"}],
+            "categories": [{"id": "c1"}, {"id": "c2"}, {"id": "c3"}],
+            "payees": [{"id": "py1"}],
+            "months": [{"month": "2026-06-01"}],
+            "transactions": [{"id": "t1"}, {"id": "t2"}],
+            "scheduled_transactions": [{"id": "st1"}],
+        },
+        "server_knowledge": 99,
+    }
+}
+
+
+def test_parse_plan_detail_summary_metadata_and_formats() -> None:
+    summary = parse_plan_detail_summary(PLAN_DETAIL_PAYLOAD)
+    assert summary.id == "p1"
+    assert summary.name == "My Plan"
+    assert summary.first_month == "2025-01-01"
+    assert summary.last_month == "2026-06-01"
+    assert summary.last_modified_on == "2026-06-01T00:00:00Z"
+    assert summary.currency_format is not None
+    assert summary.currency_format.iso_code == "USD"
+    assert summary.currency_format.currency_symbol == "$"
+    assert summary.date_format is not None
+    assert summary.date_format.format == "MM/DD/YYYY"
+
+
+def test_parse_plan_detail_summary_counts() -> None:
+    summary = parse_plan_detail_summary(PLAN_DETAIL_PAYLOAD)
+    assert summary.accounts_count == 2
+    assert summary.category_groups_count == 1
+    assert summary.categories_count == 3
+    assert summary.payees_count == 1
+    assert summary.months_count == 1
+    assert summary.transactions_count == 2
+    assert summary.scheduled_transactions_count == 1
+
+
+def test_parse_plan_detail_summary_missing_arrays_count_zero() -> None:
+    summary = parse_plan_detail_summary(
+        {"data": {"plan": {"id": "p2", "name": "Bare"}}}
+    )
+    assert summary.accounts_count == 0
+    assert summary.transactions_count == 0
+    assert summary.currency_format is None
+    assert summary.date_format is None
+
+
+def test_parse_plan_settings() -> None:
+    settings = parse_plan_settings(
+        {
+            "data": {
+                "settings": {
+                    "date_format": {"format": "YYYY-MM-DD"},
+                    "currency_format": {
+                        "iso_code": "EUR",
+                        "decimal_digits": 2,
+                        "decimal_separator": ",",
+                        "symbol_first": False,
+                        "group_separator": ".",
+                        "currency_symbol": "€",
+                        "display_symbol": True,
+                        "example_format": "123.456,78",
+                    },
+                }
+            }
+        }
+    )
+    assert settings.date_format is not None
+    assert settings.date_format.format == "YYYY-MM-DD"
+    assert settings.currency_format is not None
+    assert settings.currency_format.iso_code == "EUR"
+
+
+def test_parse_plan_settings_nullable_formats() -> None:
+    settings = parse_plan_settings(
+        {"data": {"settings": {"date_format": None, "currency_format": None}}}
+    )
+    assert settings.date_format is None
+    assert settings.currency_format is None
+
+
 def test_parse_user_returns_user_id() -> None:
     user = parse_user({"data": {"user": {"id": "u1"}}})
     assert user.id == "u1"
@@ -135,7 +238,7 @@ def test_parse_user_missing_fields_raises() -> None:
 
 
 def test_parse_empty_lists_yield_empty_tuples() -> None:
-    assert parse_budgets({"data": {"budgets": []}}) == ()
+    assert parse_plans({"data": {"plans": []}}) == ()
     assert parse_accounts({"data": {"accounts": []}}) == ()
     assert parse_categories({"data": {"category_groups": []}}) == ()
     assert parse_transactions({"data": {"transactions": []}}) == ()

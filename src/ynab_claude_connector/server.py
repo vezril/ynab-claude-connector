@@ -15,10 +15,12 @@ from mcp.server.fastmcp import FastMCP
 from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.tools import ping
 from ynab_claude_connector.ynab.tools import (
+    get_plan,
+    get_plan_settings,
     get_user,
     list_accounts,
-    list_budgets,
     list_categories,
+    list_plans,
     list_transactions,
 )
 
@@ -28,7 +30,9 @@ _SERVER_NAME: Final = "ynab-claude-connector"
 _TOOLS: Final = (
     ping,
     get_user,
-    list_budgets,
+    list_plans,
+    get_plan,
+    get_plan_settings,
     list_accounts,
     list_categories,
     list_transactions,
