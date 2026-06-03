@@ -20,10 +20,12 @@ from ynab_claude_connector.ynab.models import (
     Budget,
     Category,
     Transaction,
+    User,
     parse_accounts,
     parse_budgets,
     parse_categories,
     parse_transactions,
+    parse_user,
 )
 
 _DEFAULT_BUDGET: str = "default"
@@ -55,6 +57,9 @@ class YnabClient:
             body = _safe_json(response)
             raise error_from_response(response.status_code, body)
         return _safe_json(response)
+
+    async def get_user(self) -> User:
+        return parse_user(await self._get("user"))
 
     async def list_budgets(self) -> tuple[Budget, ...]:
         return parse_budgets(await self._get("budgets"))

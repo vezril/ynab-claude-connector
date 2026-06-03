@@ -125,6 +125,7 @@ ynab-claude-connector
 
 | Tool                | Arguments                       | Returns                                              |
 | ------------------- | ------------------------------- | ---------------------------------------------------- |
+| `get_user`          | _(none)_                        | The authenticated user's id                          |
 | `list_budgets`      | _(none)_                        | Your budgets (id, name)                              |
 | `list_accounts`     | `budget_id` (default `default`) | Accounts with balances                               |
 | `list_categories`   | `budget_id` (default `default`) | Categories with budgeted/activity/balance            |
@@ -202,9 +203,9 @@ Notes:
 ### 3. Restart Claude Desktop
 
 Fully quit and reopen it (the config is read at startup). The connector then appears in the
-tools menu, exposing `ping`, `list_budgets`, `list_accounts`, `list_categories`, and
-`list_transactions`. Try asking *"List my YNAB budgets"* or *"What are my account
-balances?"*.
+tools menu, exposing `ping`, `get_user`, `list_budgets`, `list_accounts`,
+`list_categories`, and `list_transactions`. Try asking *"List my YNAB budgets"* or *"What
+are my account balances?"*.
 
 ### Troubleshooting
 

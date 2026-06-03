@@ -29,6 +29,7 @@ def test_build_server_registers_all_tools() -> None:
     names = set(_tool_names(server))
     assert names == {
         "ping",
+        "get_user",
         "list_budgets",
         "list_accounts",
         "list_categories",
