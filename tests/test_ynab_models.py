@@ -7,6 +7,7 @@ import pytest
 from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
+    parse_category,
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
@@ -97,6 +98,36 @@ def test_parse_accounts_keeps_milliunits() -> None:
     assert account.on_budget is True
     assert account.closed is False
     assert account.balance == 123450  # milliunits, unchanged
+
+
+def test_parse_category_single() -> None:
+    category = parse_category(
+        {
+            "data": {
+                "category": {
+                    "id": "c1",
+                    "name": "Rent",
+                    "category_group_id": "g1",
+                    "budgeted": 1000000,
+                    "activity": -250000,
+                    "balance": 750000,
+                }
+            }
+        }
+    )
+    assert category.id == "c1"
+    assert category.name == "Rent"
+    assert category.category_group_id == "g1"
+    assert category.budgeted == 1000000
+    assert category.activity == -250000
+    assert category.balance == 750000
+
+
+def test_parse_category_missing_fields_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_category({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_category({"data": {"category": {}}})
 
 
 def test_parse_categories_flattens_groups() -> None:

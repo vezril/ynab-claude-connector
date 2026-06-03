@@ -65,6 +65,20 @@ async def list_categories(plan_id: str = _DEFAULT_PLAN) -> tuple[Category, ...]:
         return await client.list_categories(plan_id)
 
 
+async def get_category(category_id: str, plan_id: str = _DEFAULT_PLAN) -> Category:
+    """Return a single category by id (defaults to the last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_category(category_id, plan_id)
+
+
+async def get_month_category(
+    month: str, category_id: str, plan_id: str = _DEFAULT_PLAN
+) -> Category:
+    """Return a category's values for a month (`current` or an ISO `YYYY-MM-01`)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_month_category(month, category_id, plan_id)
+
+
 async def list_transactions(
     plan_id: str = _DEFAULT_PLAN,
 ) -> tuple[Transaction, ...]:

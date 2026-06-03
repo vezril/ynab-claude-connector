@@ -182,20 +182,29 @@ def parse_accounts(payload: Mapping[str, Any]) -> tuple[Account, ...]:
     )
 
 
+def _category_from(item: Mapping[str, Any]) -> Category:
+    return Category(
+        id=item["id"],
+        name=item["name"],
+        category_group_id=item.get("category_group_id"),
+        budgeted=int(item.get("budgeted", 0)),
+        activity=int(item.get("activity", 0)),
+        balance=int(item.get("balance", 0)),
+    )
+
+
 def parse_categories(payload: Mapping[str, Any]) -> tuple[Category, ...]:
     groups = _data(payload).get("category_groups", []) or []
     return tuple(
-        Category(
-            id=category["id"],
-            name=category["name"],
-            category_group_id=category.get("category_group_id"),
-            budgeted=int(category.get("budgeted", 0)),
-            activity=int(category.get("activity", 0)),
-            balance=int(category.get("balance", 0)),
-        )
+        _category_from(category)
         for group in groups
         for category in (group.get("categories", []) or [])
     )
+
+
+def parse_category(payload: Mapping[str, Any]) -> Category:
+    # `category` and its `id` are required: a malformed body raises.
+    return _category_from(_data(payload)["category"])
 
 
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:

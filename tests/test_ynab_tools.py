@@ -183,6 +183,48 @@ def test_get_plan_settings_without_token_raises(
         asyncio.run(tools.get_plan_settings())
 
 
+_CATEGORY_RESPONSE = {
+    "data": {
+        "category": {
+            "id": "c1",
+            "name": "Rent",
+            "category_group_id": "g1",
+            "budgeted": 100,
+            "activity": -50,
+            "balance": 50,
+        }
+    }
+}
+
+
+def test_get_category_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch, lambda r: httpx.Response(200, json=_CATEGORY_RESPONSE)
+    )
+    category = asyncio.run(tools.get_category("c1"))
+    assert category.name == "Rent"
+    assert captured["path"] == "/v1/plans/last-used/categories/c1"
+
+
+def test_get_month_category_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch, lambda r: httpx.Response(200, json=_CATEGORY_RESPONSE)
+    )
+    category = asyncio.run(tools.get_month_category("current", "c1"))
+    assert category.id == "c1"
+    assert captured["path"] == "/v1/plans/last-used/months/current/categories/c1"
+
+
+def test_category_tools_without_token_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_category("c1"))
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_month_category("current", "c1"))
+
+
 def test_tools_without_token_raise_auth_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

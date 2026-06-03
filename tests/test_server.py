@@ -35,6 +35,8 @@ def test_build_server_registers_all_tools() -> None:
         "get_plan_settings",
         "list_accounts",
         "list_categories",
+        "get_category",
+        "get_month_category",
         "list_transactions",
     }
 
