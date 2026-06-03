@@ -17,18 +17,22 @@ from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.ynab.errors import YnabAuthError, error_from_response
 from ynab_claude_connector.ynab.models import (
     Account,
-    Budget,
     Category,
+    Plan,
+    PlanDetailSummary,
+    PlanSettings,
     Transaction,
     User,
     parse_accounts,
-    parse_budgets,
     parse_categories,
+    parse_plan_detail_summary,
+    parse_plan_settings,
+    parse_plans,
     parse_transactions,
     parse_user,
 )
 
-_DEFAULT_BUDGET: str = "default"
+_DEFAULT_PLAN: str = "last-used"
 
 
 class YnabClient:
@@ -61,23 +65,27 @@ class YnabClient:
     async def get_user(self) -> User:
         return parse_user(await self._get("user"))
 
-    async def list_budgets(self) -> tuple[Budget, ...]:
-        return parse_budgets(await self._get("budgets"))
+    async def list_plans(self) -> tuple[Plan, ...]:
+        return parse_plans(await self._get("plans"))
 
-    async def list_accounts(
-        self, budget_id: str = _DEFAULT_BUDGET
-    ) -> tuple[Account, ...]:
-        return parse_accounts(await self._get(f"budgets/{budget_id}/accounts"))
+    async def get_plan(self, plan_id: str = _DEFAULT_PLAN) -> PlanDetailSummary:
+        return parse_plan_detail_summary(await self._get(f"plans/{plan_id}"))
+
+    async def get_plan_settings(self, plan_id: str = _DEFAULT_PLAN) -> PlanSettings:
+        return parse_plan_settings(await self._get(f"plans/{plan_id}/settings"))
+
+    async def list_accounts(self, plan_id: str = _DEFAULT_PLAN) -> tuple[Account, ...]:
+        return parse_accounts(await self._get(f"plans/{plan_id}/accounts"))
 
     async def list_categories(
-        self, budget_id: str = _DEFAULT_BUDGET
+        self, plan_id: str = _DEFAULT_PLAN
     ) -> tuple[Category, ...]:
-        return parse_categories(await self._get(f"budgets/{budget_id}/categories"))
+        return parse_categories(await self._get(f"plans/{plan_id}/categories"))
 
     async def list_transactions(
-        self, budget_id: str = _DEFAULT_BUDGET
+        self, plan_id: str = _DEFAULT_PLAN
     ) -> tuple[Transaction, ...]:
-        return parse_transactions(await self._get(f"budgets/{budget_id}/transactions"))
+        return parse_transactions(await self._get(f"plans/{plan_id}/transactions"))
 
 
 def _safe_json(response: httpx.Response) -> dict[str, object]:

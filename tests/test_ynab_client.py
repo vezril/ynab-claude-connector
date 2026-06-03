@@ -16,8 +16,8 @@ from ynab_claude_connector.ynab.errors import (
     YnabRateLimitError,
 )
 
-BUDGETS_PAYLOAD = {
-    "data": {"budgets": [{"id": "b1", "name": "B"}, {"id": "b2", "name": "C"}]}
+PLANS_PAYLOAD = {
+    "data": {"plans": [{"id": "b1", "name": "B"}, {"id": "b2", "name": "C"}]}
 }
 ACCOUNTS_PAYLOAD = {
     "data": {
@@ -44,21 +44,21 @@ def _client(handler: Callable[[httpx.Request], httpx.Response]) -> YnabClient:
     return YnabClient(http)
 
 
-def test_list_budgets_sends_bearer_and_parses() -> None:
+def test_list_plans_sends_bearer_and_parses() -> None:
     captured: dict[str, str] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured["path"] = request.url.path
         captured["auth"] = request.headers.get("authorization", "")
-        return httpx.Response(200, json=BUDGETS_PAYLOAD)
+        return httpx.Response(200, json=PLANS_PAYLOAD)
 
     async def run() -> tuple[str, ...]:
         async with _client(handler) as client:
-            return tuple(b.id for b in await client.list_budgets())
+            return tuple(b.id for b in await client.list_plans())
 
     assert asyncio.run(run()) == ("b1", "b2")
     assert captured["auth"] == "Bearer test-token"
-    assert captured["path"] == "/v1/budgets"
+    assert captured["path"] == "/v1/plans"
 
 
 def test_get_user_sends_bearer_and_parses() -> None:
@@ -91,10 +91,67 @@ def test_budget_scoped_defaults_to_default_alias() -> None:
             return accounts[0].balance
 
     assert asyncio.run(run()) == 100
-    assert captured["path"] == "/v1/budgets/default/accounts"
+    assert captured["path"] == "/v1/plans/last-used/accounts"
 
 
-def test_explicit_budget_id_is_used() -> None:
+def test_get_plan_returns_summary_default_alias() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "plan": {
+                        "id": "p1",
+                        "name": "Plan One",
+                        "accounts": [{"id": "a1"}],
+                        "transactions": [{"id": "t1"}, {"id": "t2"}],
+                    },
+                    "server_knowledge": 1,
+                }
+            },
+        )
+
+    async def run() -> tuple[int, int]:
+        async with _client(handler) as client:
+            summary = await client.get_plan()
+            return summary.accounts_count, summary.transactions_count
+
+    assert asyncio.run(run()) == (1, 2)
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used"
+
+
+def test_get_plan_settings_returns_settings_default_alias() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        return httpx.Response(
+            200,
+            json={
+                "data": {
+                    "settings": {
+                        "date_format": {"format": "YYYY-MM-DD"},
+                        "currency_format": None,
+                    }
+                }
+            },
+        )
+
+    async def run() -> str | None:
+        async with _client(handler) as client:
+            settings = await client.get_plan_settings()
+            return settings.date_format.format if settings.date_format else None
+
+    assert asyncio.run(run()) == "YYYY-MM-DD"
+    assert captured["path"] == "/v1/plans/last-used/settings"
+
+
+def test_explicit_plan_id_is_used() -> None:
     captured: dict[str, str] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -106,7 +163,7 @@ def test_explicit_budget_id_is_used() -> None:
             await client.list_transactions("my-budget")
 
     asyncio.run(run())
-    assert captured["path"] == "/v1/budgets/my-budget/transactions"
+    assert captured["path"] == "/v1/plans/my-budget/transactions"
 
 
 @pytest.mark.parametrize(
@@ -125,7 +182,7 @@ def test_error_statuses_map_to_typed_errors(
 
     async def run() -> None:
         async with _client(handler) as client:
-            await client.list_budgets()
+            await client.list_plans()
 
     with pytest.raises(expected):
         asyncio.run(run())

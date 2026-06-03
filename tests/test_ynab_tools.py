@@ -12,7 +12,7 @@ from ynab_claude_connector.ynab import tools
 from ynab_claude_connector.ynab.client import YnabClient
 from ynab_claude_connector.ynab.errors import YnabAuthError
 
-BUDGETS_PAYLOAD = {"data": {"budgets": [{"id": "b1", "name": "B"}]}}
+PLANS_PAYLOAD = {"data": {"plans": [{"id": "b1", "name": "B"}]}}
 ACCOUNTS_PAYLOAD = {
     "data": {
         "accounts": [
@@ -51,9 +51,9 @@ def _patch_client(
     return captured
 
 
-def test_list_budgets_tool_returns_budgets(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch_client(monkeypatch, lambda r: httpx.Response(200, json=BUDGETS_PAYLOAD))
-    budgets = asyncio.run(tools.list_budgets())
+def test_list_plans_tool_returns_budgets(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_client(monkeypatch, lambda r: httpx.Response(200, json=PLANS_PAYLOAD))
+    budgets = asyncio.run(tools.list_plans())
     assert [b.id for b in budgets] == ["b1"]
 
 
@@ -65,7 +65,7 @@ def test_list_accounts_tool_defaults_to_default_alias(
     )
     accounts = asyncio.run(tools.list_accounts())
     assert accounts[0].balance == 500
-    assert captured["path"] == "/v1/budgets/default/accounts"
+    assert captured["path"] == "/v1/plans/last-used/accounts"
 
 
 def test_list_categories_tool_defaults_to_default_alias(
@@ -94,7 +94,7 @@ def test_list_categories_tool_defaults_to_default_alias(
     captured = _patch_client(monkeypatch, lambda r: httpx.Response(200, json=payload))
     categories = asyncio.run(tools.list_categories())
     assert categories[0].name == "Rent"
-    assert captured["path"] == "/v1/budgets/default/categories"
+    assert captured["path"] == "/v1/plans/last-used/categories"
 
 
 def test_list_transactions_tool_uses_explicit_budget(
@@ -117,7 +117,7 @@ def test_list_transactions_tool_uses_explicit_budget(
     captured = _patch_client(monkeypatch, lambda r: httpx.Response(200, json=payload))
     transactions = asyncio.run(tools.list_transactions("budget-x"))
     assert transactions[0].id == "t1"
-    assert captured["path"] == "/v1/budgets/budget-x/transactions"
+    assert captured["path"] == "/v1/plans/budget-x/transactions"
 
 
 def test_get_user_tool_returns_user_id(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -138,10 +138,55 @@ def test_get_user_without_token_raises_auth_error(
         asyncio.run(tools.get_user())
 
 
+def test_get_plan_tool_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
+    payload = {
+        "data": {
+            "plan": {
+                "id": "p1",
+                "name": "Plan One",
+                "accounts": [{"id": "a1"}, {"id": "a2"}],
+                "categories": [{"id": "c1"}],
+            },
+            "server_knowledge": 1,
+        }
+    }
+    captured = _patch_client(monkeypatch, lambda r: httpx.Response(200, json=payload))
+    summary = asyncio.run(tools.get_plan())
+    assert summary.accounts_count == 2
+    assert summary.categories_count == 1
+    assert captured["path"] == "/v1/plans/last-used"
+
+
+def test_get_plan_settings_tool_returns_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = {
+        "data": {
+            "settings": {
+                "date_format": {"format": "MM/DD/YYYY"},
+                "currency_format": None,
+            }
+        }
+    }
+    captured = _patch_client(monkeypatch, lambda r: httpx.Response(200, json=payload))
+    settings = asyncio.run(tools.get_plan_settings("p9"))
+    assert settings.date_format is not None
+    assert settings.date_format.format == "MM/DD/YYYY"
+    assert captured["path"] == "/v1/plans/p9/settings"
+
+
+def test_get_plan_settings_without_token_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_plan_settings())
+
+
 def test_tools_without_token_raise_auth_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # No monkeypatch of client_from_env: use the real one with no token.
     monkeypatch.delenv("YNAB_TOKEN", raising=False)
     with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
-        asyncio.run(tools.list_budgets())
+        asyncio.run(tools.list_plans())
