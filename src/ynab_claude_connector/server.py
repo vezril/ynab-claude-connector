@@ -17,11 +17,13 @@ from ynab_claude_connector.tools import ping
 from ynab_claude_connector.ynab.tools import (
     get_category,
     get_month_category,
+    get_payee,
     get_plan,
     get_plan_settings,
     get_user,
     list_accounts,
     list_categories,
+    list_payees,
     list_plans,
     list_transactions,
 )
@@ -39,6 +41,8 @@ _TOOLS: Final = (
     list_categories,
     get_category,
     get_month_category,
+    list_payees,
+    get_payee,
     list_transactions,
 )
 

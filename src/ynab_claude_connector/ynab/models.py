@@ -86,6 +86,14 @@ class Category:
 
 
 @dataclass(frozen=True, slots=True)
+class Payee:
+    id: str
+    name: str
+    transfer_account_id: str | None
+    deleted: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Transaction:
     id: str
     date: str
@@ -205,6 +213,25 @@ def parse_categories(payload: Mapping[str, Any]) -> tuple[Category, ...]:
 def parse_category(payload: Mapping[str, Any]) -> Category:
     # `category` and its `id` are required: a malformed body raises.
     return _category_from(_data(payload)["category"])
+
+
+def _payee_from(item: Mapping[str, Any]) -> Payee:
+    return Payee(
+        id=item["id"],
+        name=item["name"],
+        transfer_account_id=item.get("transfer_account_id"),
+        deleted=bool(item.get("deleted", False)),
+    )
+
+
+def parse_payees(payload: Mapping[str, Any]) -> tuple[Payee, ...]:
+    payees = _data(payload).get("payees", []) or []
+    return tuple(_payee_from(item) for item in payees)
+
+
+def parse_payee(payload: Mapping[str, Any]) -> Payee:
+    # `payee` and its `id` are required: a malformed body raises.
+    return _payee_from(_data(payload)["payee"])
 
 
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:
