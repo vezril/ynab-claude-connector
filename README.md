@@ -66,8 +66,8 @@ python -m build
 
 The connector is a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server
 built with the official [`mcp`](https://github.com/modelcontextprotocol/python-sdk) SDK
-(FastMCP). It currently exposes a single trivial `ping` health tool — **no YNAB features
-yet** (those land in a later change).
+(FastMCP). It exposes a `ping` health tool plus read-only [YNAB](https://api.ynab.com/)
+tools (see [YNAB integration](#ynab-integration)).
 
 Run it as a module or via the installed console script:
 
@@ -96,6 +96,52 @@ YNAB_CONNECTOR_TRANSPORT=streamable-http YNAB_CONNECTOR_PORT=8000 ynab-claude-co
 Invalid configuration (e.g. an unknown transport or a non-numeric port) fails fast at
 startup with a clear error before the server begins serving.
 
+## YNAB integration
+
+The connector exposes read-only access to your YNAB budget data as MCP tools.
+
+### Authentication
+
+Authentication uses a **Personal Access Token** (single user, your own account). Create one
+in YNAB under **Account Settings → Developer Settings → New Token**, then provide it via the
+environment:
+
+| Variable            | Default                     | Description                                  |
+| ------------------- | --------------------------- | -------------------------------------------- |
+| `YNAB_TOKEN`        | _(none)_                    | YNAB Personal Access Token (**required** for YNAB tools) |
+| `YNAB_API_BASE_URL` | `https://api.ynab.com/v1`   | API base URL (override for testing/proxying) |
+
+The token is treated as a secret: it is read only from the environment and never logged or
+included in any object representation. The server still starts without a token (the `ping`
+tool works); a YNAB tool invoked without a token fails fast with a clear "set `YNAB_TOKEN`"
+error before any network call.
+
+```bash
+export YNAB_TOKEN="your-personal-access-token"
+ynab-claude-connector
+```
+
+### Tools
+
+| Tool                | Arguments                       | Returns                                              |
+| ------------------- | ------------------------------- | ---------------------------------------------------- |
+| `list_budgets`      | _(none)_                        | Your budgets (id, name)                              |
+| `list_accounts`     | `budget_id` (default `default`) | Accounts with balances                               |
+| `list_categories`   | `budget_id` (default `default`) | Categories with budgeted/activity/balance            |
+| `list_transactions` | `budget_id` (default `default`) | Transactions (date, amount, payee, category, memo)   |
+
+`budget_id` defaults to YNAB's `default` alias (your last-used budget), so you usually don't
+need to know your budget id. Monetary values are returned in YNAB **milliunits** (integers,
+e.g. `123450` = `$123.45`) with no lossy currency conversion.
+
+### Rate limits
+
+YNAB allows **200 requests per hour per token**. Exceeding it returns HTTP 429, which the
+connector surfaces as a clear rate-limit error.
+
+> **Not yet included:** OAuth, write/mutating operations, and incremental delta sync — these
+> are planned for later changes.
+
 ## Project layout
 
 ```
@@ -105,9 +151,14 @@ startup with a clear error before the server begins serving.
 │   └── ynab_claude_connector/
 │       ├── __main__.py        # runnable entry point (python -m ynab_claude_connector)
 │       ├── server.py          # FastMCP server factory (MCP SDK usage lives here)
-│       ├── tools.py           # tool implementations (currently: ping)
+│       ├── tools.py           # ping health tool
 │       ├── config.py          # env-based, validated, immutable ServerConfig
-│       └── logging_config.py  # logging setup
+│       ├── logging_config.py  # logging setup
+│       └── ynab/              # YNAB integration
+│           ├── client.py       # async httpx client (httpx usage lives here)
+│           ├── models.py       # typed models + pure response parsers
+│           ├── errors.py       # error taxonomy + status mapper
+│           └── tools.py        # the four read-only MCP tools
 ├── tests/               # pytest suite
 ├── pyproject.toml       # metadata, dependencies, and tool config (ruff/mypy/pytest)
 └── .pre-commit-config.yaml

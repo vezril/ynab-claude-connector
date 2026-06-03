@@ -9,7 +9,7 @@ raises :class:`ConfigError`. No global state, no side effects.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Final, Literal, get_args
 
 Transport = Literal["stdio", "streamable-http"]
@@ -26,12 +26,15 @@ _ENV_TRANSPORT: Final = "YNAB_CONNECTOR_TRANSPORT"
 _ENV_HOST: Final = "YNAB_CONNECTOR_HOST"
 _ENV_PORT: Final = "YNAB_CONNECTOR_PORT"
 _ENV_LOG_LEVEL: Final = "YNAB_CONNECTOR_LOG_LEVEL"
+_ENV_YNAB_TOKEN: Final = "YNAB_TOKEN"
+_ENV_YNAB_API_BASE_URL: Final = "YNAB_API_BASE_URL"
 
 # Defaults.
 _DEFAULT_TRANSPORT: Final[Transport] = "stdio"
 _DEFAULT_HOST: Final = "127.0.0.1"
 _DEFAULT_PORT: Final = 8000
 _DEFAULT_LOG_LEVEL: Final[LogLevel] = "INFO"
+_DEFAULT_YNAB_API_BASE_URL: Final = "https://api.ynab.com/v1"
 
 
 class ConfigError(ValueError):
@@ -46,6 +49,11 @@ class ServerConfig:
     host: str
     port: int
     log_level: LogLevel
+    # YNAB credentials. The token is a secret: repr=False keeps it out of
+    # logs and any object representation. It is optional so the server can
+    # start (and serve `ping`) without YNAB configured.
+    ynab_token: str | None = field(default=None, repr=False)
+    ynab_api_base_url: str = _DEFAULT_YNAB_API_BASE_URL
 
 
 def _parse_transport(value: str) -> Transport:
@@ -84,4 +92,6 @@ def from_env(env: Mapping[str, str]) -> ServerConfig:
         host=env.get(_ENV_HOST, _DEFAULT_HOST),
         port=_parse_port(env.get(_ENV_PORT, str(_DEFAULT_PORT))),
         log_level=_parse_log_level(env.get(_ENV_LOG_LEVEL, _DEFAULT_LOG_LEVEL)),
+        ynab_token=env.get(_ENV_YNAB_TOKEN),
+        ynab_api_base_url=env.get(_ENV_YNAB_API_BASE_URL, _DEFAULT_YNAB_API_BASE_URL),
     )

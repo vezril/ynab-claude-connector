@@ -12,7 +12,8 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        # Include runtime deps so the hook type-checks SDK usage like CI does.
-        additional_dependencies: ["mcp>=1.2"]
+        # Include runtime + test deps so the hook type-checks src and tests
+        # like CI does (CI runs mypy with the full environment installed).
+        additional_dependencies: ["mcp>=1.2", "httpx>=0.27", "pytest>=8.0"]
         args: [--strict]
         files: ^(src|tests)/

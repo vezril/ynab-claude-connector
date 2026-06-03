@@ -14,11 +14,23 @@ from mcp.server.fastmcp import FastMCP
 
 from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.tools import ping
+from ynab_claude_connector.ynab.tools import (
+    list_accounts,
+    list_budgets,
+    list_categories,
+    list_transactions,
+)
 
 _SERVER_NAME: Final = "ynab-claude-connector"
 
-# Tools exposed by the connector. Add YNAB tools here in a later feature.
-_TOOLS: Final = (ping,)
+# Tools exposed by the connector: the health probe plus the YNAB read tools.
+_TOOLS: Final = (
+    ping,
+    list_budgets,
+    list_accounts,
+    list_categories,
+    list_transactions,
+)
 
 
 def build_server(config: ServerConfig) -> FastMCP:
