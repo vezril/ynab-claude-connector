@@ -21,7 +21,9 @@ classifiers = [
 # Version is derived from the Git tag at build time via hatch-vcs (single
 # source of truth). There is intentionally no static `version` field here.
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "mcp>=1.2",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -32,6 +34,9 @@ dev = [
     "build>=1.2",
     "pre-commit>=3.8",
 ]
+
+[project.scripts]
+ynab-claude-connector = "ynab_claude_connector.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/vezril/ynab-claude-connector"

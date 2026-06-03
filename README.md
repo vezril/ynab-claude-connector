@@ -62,13 +62,52 @@ python -m build
 # distributions are written to dist/
 ```
 
+## Running the connector
+
+The connector is a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server
+built with the official [`mcp`](https://github.com/modelcontextprotocol/python-sdk) SDK
+(FastMCP). It currently exposes a single trivial `ping` health tool — **no YNAB features
+yet** (those land in a later change).
+
+Run it as a module or via the installed console script:
+
+```bash
+python -m ynab_claude_connector
+# or
+ynab-claude-connector
+```
+
+It is configured entirely through environment variables:
+
+| Variable                     | Default     | Description                                  |
+| ---------------------------- | ----------- | -------------------------------------------- |
+| `YNAB_CONNECTOR_TRANSPORT`   | `stdio`     | Transport: `stdio` or `streamable-http`      |
+| `YNAB_CONNECTOR_HOST`        | `127.0.0.1` | Bind host (used by `streamable-http`)        |
+| `YNAB_CONNECTOR_PORT`        | `8000`      | Bind port (used by `streamable-http`)        |
+| `YNAB_CONNECTOR_LOG_LEVEL`   | `INFO`      | `DEBUG` / `INFO` / `WARNING` / `ERROR` / `CRITICAL` |
+
+The default `stdio` transport is convenient for local use and testing. Claude's remote
+connectors use the `streamable-http` transport:
+
+```bash
+YNAB_CONNECTOR_TRANSPORT=streamable-http YNAB_CONNECTOR_PORT=8000 ynab-claude-connector
+```
+
+Invalid configuration (e.g. an unknown transport or a non-numeric port) fails fast at
+startup with a clear error before the server begins serving.
+
 ## Project layout
 
 ```
 .
 ├── .github/workflows/   # CI (lint/type-check/test) and Release (tag-triggered build)
 ├── src/
-│   └── ynab_claude_connector/   # the package (src layout)
+│   └── ynab_claude_connector/
+│       ├── __main__.py        # runnable entry point (python -m ynab_claude_connector)
+│       ├── server.py          # FastMCP server factory (MCP SDK usage lives here)
+│       ├── tools.py           # tool implementations (currently: ping)
+│       ├── config.py          # env-based, validated, immutable ServerConfig
+│       └── logging_config.py  # logging setup
 ├── tests/               # pytest suite
 ├── pyproject.toml       # metadata, dependencies, and tool config (ruff/mypy/pytest)
 └── .pre-commit-config.yaml

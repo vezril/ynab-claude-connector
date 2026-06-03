@@ -12,6 +12,7 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
-        additional_dependencies: []
+        # Include runtime deps so the hook type-checks SDK usage like CI does.
+        additional_dependencies: ["mcp>=1.2"]
         args: [--strict]
         files: ^(src|tests)/
