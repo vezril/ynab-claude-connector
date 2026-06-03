@@ -34,8 +34,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cference/ynab-claude-connector"
-Repository = "https://github.com/cference/ynab-claude-connector"
+Homepage = "https://github.com/vezril/ynab-claude-connector"
+Repository = "https://github.com/vezril/ynab-claude-connector"
 
 # --- Build / versioning -----------------------------------------------------
 [tool.hatch.version]

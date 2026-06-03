@@ -20,7 +20,7 @@ through Claude.
 
 ```bash
 # 1. Clone and enter the repo
-git clone https://github.com/cference/ynab-claude-connector.git
+git clone https://github.com/vezril/ynab-claude-connector.git
 cd ynab-claude-connector
 
 # 2. Create and activate a virtual environment
