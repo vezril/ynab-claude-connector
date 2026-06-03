@@ -31,6 +31,7 @@ Features (minimal, more features to be added later, this is just to get started)
 4. Implementation of all endpoints under the "User" Category.
 5. Implementation of all endpoints under the "Plans" Category.
 6. Implementation of all endpoints under the "Categories" Category
+7. Implementation of all endpoints under the "Payees" Category
 
 More features to come.
 
