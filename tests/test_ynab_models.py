@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import pytest
+
 from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_budgets,
     parse_categories,
     parse_transactions,
+    parse_user,
 )
 
 BUDGETS_PAYLOAD = {
@@ -117,6 +120,18 @@ def test_parse_transactions() -> None:
     assert txn.payee_name == "Market"
     assert txn.category_id == "c1"
     assert txn.account_id == "a1"
+
+
+def test_parse_user_returns_user_id() -> None:
+    user = parse_user({"data": {"user": {"id": "u1"}}})
+    assert user.id == "u1"
+
+
+def test_parse_user_missing_fields_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_user({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_user({"data": {"user": {}}})
 
 
 def test_parse_empty_lists_yield_empty_tuples() -> None:

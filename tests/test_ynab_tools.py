@@ -120,6 +120,24 @@ def test_list_transactions_tool_uses_explicit_budget(
     assert captured["path"] == "/v1/budgets/budget-x/transactions"
 
 
+def test_get_user_tool_returns_user_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch,
+        lambda r: httpx.Response(200, json={"data": {"user": {"id": "u-9"}}}),
+    )
+    user = asyncio.run(tools.get_user())
+    assert user.id == "u-9"
+    assert captured["path"] == "/v1/user"
+
+
+def test_get_user_without_token_raises_auth_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_user())
+
+
 def test_tools_without_token_raise_auth_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

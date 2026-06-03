@@ -14,6 +14,11 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
+class User:
+    id: str
+
+
+@dataclass(frozen=True, slots=True)
 class Budget:
     id: str
     name: str
@@ -56,6 +61,11 @@ def _data(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     """Return the inner ``data`` object from a YNAB response envelope."""
     data = payload.get("data", {})
     return data if isinstance(data, Mapping) else {}
+
+
+def parse_user(payload: Mapping[str, Any]) -> User:
+    # `id` is required: a malformed body should raise, not yield an empty id.
+    return User(id=_data(payload)["user"]["id"])
 
 
 def parse_budgets(payload: Mapping[str, Any]) -> tuple[Budget, ...]:

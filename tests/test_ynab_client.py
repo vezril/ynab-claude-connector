@@ -61,6 +61,23 @@ def test_list_budgets_sends_bearer_and_parses() -> None:
     assert captured["path"] == "/v1/budgets"
 
 
+def test_get_user_sends_bearer_and_parses() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        return httpx.Response(200, json={"data": {"user": {"id": "u-123"}}})
+
+    async def run() -> str:
+        async with _client(handler) as client:
+            return (await client.get_user()).id
+
+    assert asyncio.run(run()) == "u-123"
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/user"
+
+
 def test_budget_scoped_defaults_to_default_alias() -> None:
     captured: dict[str, str] = {}
 

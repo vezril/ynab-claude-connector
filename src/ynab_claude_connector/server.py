@@ -15,6 +15,7 @@ from mcp.server.fastmcp import FastMCP
 from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.tools import ping
 from ynab_claude_connector.ynab.tools import (
+    get_user,
     list_accounts,
     list_budgets,
     list_categories,
@@ -26,6 +27,7 @@ _SERVER_NAME: Final = "ynab-claude-connector"
 # Tools exposed by the connector: the health probe plus the YNAB read tools.
 _TOOLS: Final = (
     ping,
+    get_user,
     list_budgets,
     list_accounts,
     list_categories,

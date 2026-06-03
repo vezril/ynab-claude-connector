@@ -12,13 +12,25 @@ import os
 
 from ynab_claude_connector.config import ServerConfig, from_env
 from ynab_claude_connector.ynab.client import client_from_env
-from ynab_claude_connector.ynab.models import Account, Budget, Category, Transaction
+from ynab_claude_connector.ynab.models import (
+    Account,
+    Budget,
+    Category,
+    Transaction,
+    User,
+)
 
 _DEFAULT_BUDGET = "default"
 
 
 def _config() -> ServerConfig:
     return from_env(dict(os.environ))
+
+
+async def get_user() -> User:
+    """Return the authenticated YNAB user's id (GET /user)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_user()
 
 
 async def list_budgets() -> tuple[Budget, ...]:
