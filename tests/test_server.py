@@ -42,6 +42,8 @@ def test_build_server_registers_all_tools() -> None:
         "list_payee_locations",
         "get_payee_location",
         "list_payee_locations_for_payee",
+        "list_months",
+        "get_month",
         "list_transactions",
     }
 

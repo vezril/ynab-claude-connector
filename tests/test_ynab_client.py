@@ -165,6 +165,54 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_list_months_and_get_month_paths() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        month_obj = {
+            "month": "2026-06-01",
+            "income": 1,
+            "budgeted": 1,
+            "activity": -1,
+            "to_be_budgeted": 0,
+            "deleted": False,
+        }
+        if request.url.path.rstrip("/").endswith("/months"):
+            return httpx.Response(200, json={"data": {"months": [month_obj]}})
+        return httpx.Response(200, json={"data": {"month": month_obj}})
+
+    async def run_list() -> int:
+        async with _client(handler) as client:
+            return len(await client.list_months())
+
+    assert asyncio.run(run_list()) == 1
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/months"
+
+    async def run_get(m: str) -> str:
+        async with _client(handler) as client:
+            return (await client.get_month(m)).month
+
+    assert asyncio.run(run_get("2026-06-01")) == "2026-06-01"
+    assert captured["path"] == "/v1/plans/last-used/months/2026-06-01"
+    asyncio.run(run_get("current"))
+    assert captured["path"] == "/v1/plans/last-used/months/current"
+
+
+def test_get_month_404() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run() -> None:
+        async with _client(handler) as client:
+            await client.get_month("2099-01-01")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run())
+
+
 def test_payee_location_paths() -> None:
     captured: dict[str, str] = {}
 

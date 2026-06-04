@@ -197,6 +197,40 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_month_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    month_obj = {
+        "month": "2026-06-01",
+        "income": 1,
+        "budgeted": 1,
+        "activity": -1,
+        "to_be_budgeted": 0,
+        "deleted": False,
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.rstrip("/").endswith("/months"):
+            return httpx.Response(200, json={"data": {"months": [month_obj]}})
+        return httpx.Response(200, json={"data": {"month": month_obj}})
+
+    captured = _patch_client(monkeypatch, handler)
+
+    months = asyncio.run(tools.list_months())
+    assert months[0].month == "2026-06-01"
+    assert captured["path"] == "/v1/plans/last-used/months"
+
+    month = asyncio.run(tools.get_month("current"))
+    assert month.month == "2026-06-01"
+    assert captured["path"] == "/v1/plans/last-used/months/current"
+
+
+def test_month_tools_without_token_raise(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_months())
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_month("current"))
+
+
 def test_payee_location_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/payee_locations/pl1"):
