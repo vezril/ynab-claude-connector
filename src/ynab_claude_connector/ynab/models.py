@@ -356,19 +356,25 @@ def parse_money_movement_groups(
     return tuple(_money_movement_group_from(item) for item in groups)
 
 
+def _transaction_from(item: Mapping[str, Any]) -> Transaction:
+    return Transaction(
+        id=item["id"],
+        date=item["date"],
+        amount=int(item["amount"]),
+        cleared=item.get("cleared", ""),
+        approved=bool(item.get("approved", False)),
+        account_id=item["account_id"],
+        memo=item.get("memo"),
+        payee_name=item.get("payee_name"),
+        category_id=item.get("category_id"),
+    )
+
+
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:
     transactions = _data(payload).get("transactions", []) or []
-    return tuple(
-        Transaction(
-            id=item["id"],
-            date=item["date"],
-            amount=int(item["amount"]),
-            cleared=item.get("cleared", ""),
-            approved=bool(item.get("approved", False)),
-            account_id=item["account_id"],
-            memo=item.get("memo"),
-            payee_name=item.get("payee_name"),
-            category_id=item.get("category_id"),
-        )
-        for item in transactions
-    )
+    return tuple(_transaction_from(item) for item in transactions)
+
+
+def parse_transaction(payload: Mapping[str, Any]) -> Transaction:
+    # `transaction` and its `id` are required: a malformed body raises.
+    return _transaction_from(_data(payload)["transaction"])

@@ -145,6 +145,11 @@ ynab-claude-connector
 | `list_money_movement_groups` | `plan_id` (default `last-used`) | Money movement groups                         |
 | `list_money_movement_groups_for_month` | `month`, `plan_id` (default `last-used`) | Money movement groups for a month |
 | `list_transactions` | `plan_id` (default `last-used`)    | Transactions (date, amount, payee, category, memo)   |
+| `get_transaction`   | `transaction_id`, `plan_id` (default `last-used`) | A single transaction by id            |
+| `list_transactions_by_account` | `account_id`, `plan_id` (default `last-used`) | An account's transactions          |
+| `list_transactions_by_category` | `category_id`, `plan_id` (default `last-used`) | A category's transactions         |
+| `list_transactions_by_payee` | `payee_id`, `plan_id` (default `last-used`) | A payee's transactions               |
+| `list_transactions_by_month` | `month`, `plan_id` (default `last-used`) | A month's transactions                   |
 
 > **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
 > so the tools use plan terminology (`list_plans`, `plan_id`). `plan_id` defaults to YNAB's
@@ -229,8 +234,10 @@ tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_set
 `get_payee`, `list_payee_locations`, `get_payee_location`,
 `list_payee_locations_for_payee`, `list_months`, `get_month`, `list_money_movements`,
 `list_money_movements_for_month`, `list_money_movement_groups`,
-`list_money_movement_groups_for_month`, and `list_transactions`. Try asking *"List my YNAB
-plans"* or *"What are my account balances?"*.
+`list_money_movement_groups_for_month`, `list_transactions`, `get_transaction`,
+`list_transactions_by_account`, `list_transactions_by_category`,
+`list_transactions_by_payee`, and `list_transactions_by_month`. Try asking *"List my YNAB
+plans"* or *"Show my transactions for this month"*.
 
 ### Troubleshooting
 

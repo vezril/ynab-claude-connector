@@ -22,6 +22,7 @@ from ynab_claude_connector.ynab.tools import (
     get_payee_location,
     get_plan,
     get_plan_settings,
+    get_transaction,
     get_user,
     list_accounts,
     list_categories,
@@ -35,6 +36,10 @@ from ynab_claude_connector.ynab.tools import (
     list_payees,
     list_plans,
     list_transactions,
+    list_transactions_by_account,
+    list_transactions_by_category,
+    list_transactions_by_month,
+    list_transactions_by_payee,
 )
 
 _SERVER_NAME: Final = "ynab-claude-connector"
@@ -62,6 +67,11 @@ _TOOLS: Final = (
     list_money_movement_groups,
     list_money_movement_groups_for_month,
     list_transactions,
+    get_transaction,
+    list_transactions_by_account,
+    list_transactions_by_category,
+    list_transactions_by_payee,
+    list_transactions_by_month,
 )
 
 

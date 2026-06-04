@@ -49,6 +49,11 @@ def test_build_server_registers_all_tools() -> None:
         "list_money_movement_groups",
         "list_money_movement_groups_for_month",
         "list_transactions",
+        "get_transaction",
+        "list_transactions_by_account",
+        "list_transactions_by_category",
+        "list_transactions_by_payee",
+        "list_transactions_by_month",
     }
 
 

@@ -165,6 +165,67 @@ _CATEGORY_RESPONSE = {
 }
 
 
+_TXN = {
+    "id": "t1",
+    "date": "2026-06-01",
+    "amount": -100,
+    "cleared": "cleared",
+    "approved": True,
+    "account_id": "a1",
+}
+
+
+def test_get_transaction_path_and_404() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        return httpx.Response(200, json={"data": {"transaction": _TXN}})
+
+    async def run() -> str:
+        async with _client(handler) as client:
+            return (await client.get_transaction("t1")).id
+
+    assert asyncio.run(run()) == "t1"
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/transactions/t1"
+
+    def handler_404(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run_404() -> None:
+        async with _client(handler_404) as client:
+            await client.get_transaction("missing")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run_404())
+
+
+def test_scoped_transaction_list_paths() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        return httpx.Response(200, json={"data": {"transactions": [_TXN]}})
+
+    async def n(method: str, *args: str) -> int:
+        async with _client(handler) as client:
+            return len(await getattr(client, method)(*args))
+
+    assert asyncio.run(n("list_transactions_by_account", "a1")) == 1
+    assert captured["path"] == "/v1/plans/last-used/accounts/a1/transactions"
+
+    asyncio.run(n("list_transactions_by_category", "c1"))
+    assert captured["path"] == "/v1/plans/last-used/categories/c1/transactions"
+
+    asyncio.run(n("list_transactions_by_payee", "py1"))
+    assert captured["path"] == "/v1/plans/last-used/payees/py1/transactions"
+
+    asyncio.run(n("list_transactions_by_month", "current"))
+    assert captured["path"] == "/v1/plans/last-used/months/current/transactions"
+
+
 def test_money_movement_paths() -> None:
     captured: dict[str, str] = {}
 
