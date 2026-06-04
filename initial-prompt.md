@@ -34,6 +34,7 @@ Features (minimal, more features to be added later, this is just to get started)
 7. Implementation of all endpoints under the "Payees" Category
 8. Implementation of all endpoints under the "Payee Locations" Category
 9. Implementation of all endpoints under the "Months" Category
+10. Implementation of all endpoints under the "Money Movements" Category
 
 More features to come.
 
