@@ -103,6 +103,18 @@ class PayeeLocation:
 
 
 @dataclass(frozen=True, slots=True)
+class Month:
+    month: str  # ISO date identifying the month, e.g. "2026-06-01"
+    note: str | None
+    income: int  # milliunits
+    budgeted: int  # milliunits
+    activity: int  # milliunits
+    to_be_budgeted: int  # milliunits
+    age_of_money: int | None
+    deleted: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Transaction:
     id: str
     date: str
@@ -261,6 +273,29 @@ def parse_payee_locations(payload: Mapping[str, Any]) -> tuple[PayeeLocation, ..
 def parse_payee_location(payload: Mapping[str, Any]) -> PayeeLocation:
     # `payee_location` and its `id` are required: a malformed body raises.
     return _payee_location_from(_data(payload)["payee_location"])
+
+
+def _month_from(item: Mapping[str, Any]) -> Month:
+    return Month(
+        month=item["month"],
+        note=item.get("note"),
+        income=int(item.get("income", 0)),
+        budgeted=int(item.get("budgeted", 0)),
+        activity=int(item.get("activity", 0)),
+        to_be_budgeted=int(item.get("to_be_budgeted", 0)),
+        age_of_money=item.get("age_of_money"),
+        deleted=bool(item.get("deleted", False)),
+    )
+
+
+def parse_months(payload: Mapping[str, Any]) -> tuple[Month, ...]:
+    months = _data(payload).get("months", []) or []
+    return tuple(_month_from(item) for item in months)
+
+
+def parse_month(payload: Mapping[str, Any]) -> Month:
+    # `month` object (and its `month` id) is required: a malformed body raises.
+    return _month_from(_data(payload)["month"])
 
 
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:

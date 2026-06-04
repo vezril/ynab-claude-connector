@@ -8,6 +8,8 @@ from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
     parse_category,
+    parse_month,
+    parse_months,
     parse_payee,
     parse_payee_location,
     parse_payee_locations,
@@ -129,6 +131,68 @@ def test_parse_payees() -> None:
         ("py1", "Market", None),
         ("py2", "Transfer", "a9"),
     ]
+
+
+def test_parse_months() -> None:
+    months = parse_months(
+        {
+            "data": {
+                "months": [
+                    {
+                        "month": "2026-06-01",
+                        "note": "June",
+                        "income": 5000000,
+                        "budgeted": 4000000,
+                        "activity": -3500000,
+                        "to_be_budgeted": 1000000,
+                        "age_of_money": 30,
+                        "deleted": False,
+                    }
+                ]
+            }
+        }
+    )
+    assert len(months) == 1
+    m = months[0]
+    assert m.month == "2026-06-01"
+    assert m.note == "June"
+    assert m.income == 5000000
+    assert m.budgeted == 4000000
+    assert m.activity == -3500000
+    assert m.to_be_budgeted == 1000000
+    assert m.age_of_money == 30
+    assert m.deleted is False
+
+
+def test_parse_month_single() -> None:
+    m = parse_month(
+        {
+            "data": {
+                "month": {
+                    "month": "2026-06-01",
+                    "income": 0,
+                    "budgeted": 0,
+                    "activity": 0,
+                    "to_be_budgeted": 0,
+                    "deleted": False,
+                }
+            }
+        }
+    )
+    assert m.month == "2026-06-01"
+    assert m.note is None
+    assert m.age_of_money is None
+
+
+def test_parse_months_empty() -> None:
+    assert parse_months({"data": {"months": []}}) == ()
+
+
+def test_parse_month_missing_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_month({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_month({"data": {"month": {}}})
 
 
 def test_parse_payee_locations() -> None:

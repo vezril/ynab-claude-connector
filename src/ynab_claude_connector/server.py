@@ -16,6 +16,7 @@ from ynab_claude_connector.config import ServerConfig
 from ynab_claude_connector.tools import ping
 from ynab_claude_connector.ynab.tools import (
     get_category,
+    get_month,
     get_month_category,
     get_payee,
     get_payee_location,
@@ -24,6 +25,7 @@ from ynab_claude_connector.ynab.tools import (
     get_user,
     list_accounts,
     list_categories,
+    list_months,
     list_payee_locations,
     list_payee_locations_for_payee,
     list_payees,
@@ -49,6 +51,8 @@ _TOOLS: Final = (
     list_payee_locations,
     get_payee_location,
     list_payee_locations_for_payee,
+    list_months,
+    get_month,
     list_transactions,
 )
 
