@@ -94,6 +94,15 @@ class Payee:
 
 
 @dataclass(frozen=True, slots=True)
+class PayeeLocation:
+    id: str
+    payee_id: str
+    latitude: str | None
+    longitude: str | None
+    deleted: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Transaction:
     id: str
     date: str
@@ -232,6 +241,26 @@ def parse_payees(payload: Mapping[str, Any]) -> tuple[Payee, ...]:
 def parse_payee(payload: Mapping[str, Any]) -> Payee:
     # `payee` and its `id` are required: a malformed body raises.
     return _payee_from(_data(payload)["payee"])
+
+
+def _payee_location_from(item: Mapping[str, Any]) -> PayeeLocation:
+    return PayeeLocation(
+        id=item["id"],
+        payee_id=item["payee_id"],
+        latitude=item.get("latitude"),
+        longitude=item.get("longitude"),
+        deleted=bool(item.get("deleted", False)),
+    )
+
+
+def parse_payee_locations(payload: Mapping[str, Any]) -> tuple[PayeeLocation, ...]:
+    locations = _data(payload).get("payee_locations", []) or []
+    return tuple(_payee_location_from(item) for item in locations)
+
+
+def parse_payee_location(payload: Mapping[str, Any]) -> PayeeLocation:
+    # `payee_location` and its `id` are required: a malformed body raises.
+    return _payee_location_from(_data(payload)["payee_location"])
 
 
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:
