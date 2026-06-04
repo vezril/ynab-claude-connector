@@ -175,6 +175,55 @@ _TXN = {
 }
 
 
+_SCHED = {
+    "id": "st1",
+    "date_first": "2026-01-01",
+    "date_next": "2026-07-01",
+    "frequency": "monthly",
+    "amount": -120000,
+    "account_id": "a1",
+    "deleted": False,
+}
+
+
+def test_scheduled_transaction_paths_and_404() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        if request.url.path.rstrip("/").endswith("scheduled_transactions"):
+            return httpx.Response(
+                200, json={"data": {"scheduled_transactions": [_SCHED]}}
+            )
+        return httpx.Response(200, json={"data": {"scheduled_transaction": _SCHED}})
+
+    async def run_list() -> int:
+        async with _client(handler) as client:
+            return len(await client.list_scheduled_transactions())
+
+    assert asyncio.run(run_list()) == 1
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/scheduled_transactions"
+
+    async def run_get() -> str:
+        async with _client(handler) as client:
+            return (await client.get_scheduled_transaction("st1")).frequency
+
+    assert asyncio.run(run_get()) == "monthly"
+    assert captured["path"] == "/v1/plans/last-used/scheduled_transactions/st1"
+
+    def handler_404(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run_404() -> None:
+        async with _client(handler_404) as client:
+            await client.get_scheduled_transaction("missing")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run_404())
+
+
 def test_get_transaction_path_and_404() -> None:
     captured: dict[str, str] = {}
 

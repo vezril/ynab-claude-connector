@@ -19,6 +19,8 @@ from ynab_claude_connector.ynab.models import (
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
+    parse_scheduled_transaction,
+    parse_scheduled_transactions,
     parse_transaction,
     parse_transactions,
     parse_user,
@@ -379,6 +381,74 @@ def test_parse_categories_flattens_groups() -> None:
     assert category.budgeted == 1000000
     assert category.activity == -1000000
     assert category.balance == 0
+
+
+def test_parse_scheduled_transactions() -> None:
+    sched = parse_scheduled_transactions(
+        {
+            "data": {
+                "scheduled_transactions": [
+                    {
+                        "id": "st1",
+                        "date_first": "2026-01-01",
+                        "date_next": "2026-07-01",
+                        "frequency": "monthly",
+                        "amount": -120000,
+                        "account_id": "a1",
+                        "payee_id": "py1",
+                        "category_id": "c1",
+                        "memo": "Rent",
+                        "deleted": False,
+                    }
+                ]
+            }
+        }
+    )
+    assert len(sched) == 1
+    s = sched[0]
+    assert s.id == "st1"
+    assert s.date_first == "2026-01-01"
+    assert s.date_next == "2026-07-01"
+    assert s.frequency == "monthly"
+    assert s.amount == -120000
+    assert s.account_id == "a1"
+    assert s.payee_id == "py1"
+    assert s.category_id == "c1"
+    assert s.memo == "Rent"
+    assert s.deleted is False
+
+
+def test_parse_scheduled_transaction_minimal() -> None:
+    s = parse_scheduled_transaction(
+        {
+            "data": {
+                "scheduled_transaction": {
+                    "id": "st2",
+                    "date_first": "2026-01-01",
+                    "date_next": "2026-07-01",
+                    "frequency": "never",
+                    "amount": 0,
+                    "account_id": "a1",
+                    "deleted": False,
+                }
+            }
+        }
+    )
+    assert s.id == "st2"
+    assert s.payee_id is None
+    assert s.category_id is None
+    assert s.memo is None
+
+
+def test_parse_scheduled_transactions_empty() -> None:
+    assert parse_scheduled_transactions({"data": {"scheduled_transactions": []}}) == ()
+
+
+def test_parse_scheduled_transaction_missing_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_scheduled_transaction({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_scheduled_transaction({"data": {"scheduled_transaction": {}}})
 
 
 def test_parse_transaction_single() -> None:

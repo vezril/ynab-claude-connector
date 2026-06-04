@@ -207,6 +207,46 @@ _TXN = {
 }
 
 
+_SCHED = {
+    "id": "st1",
+    "date_first": "2026-01-01",
+    "date_next": "2026-07-01",
+    "frequency": "monthly",
+    "amount": -120000,
+    "account_id": "a1",
+    "deleted": False,
+}
+
+
+def test_scheduled_transaction_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.rstrip("/").endswith("scheduled_transactions"):
+            return httpx.Response(
+                200, json={"data": {"scheduled_transactions": [_SCHED]}}
+            )
+        return httpx.Response(200, json={"data": {"scheduled_transaction": _SCHED}})
+
+    captured = _patch_client(monkeypatch, handler)
+
+    sched = asyncio.run(tools.list_scheduled_transactions())
+    assert sched[0].frequency == "monthly"
+    assert captured["path"] == "/v1/plans/last-used/scheduled_transactions"
+
+    one = asyncio.run(tools.get_scheduled_transaction("st1"))
+    assert one.id == "st1"
+    assert captured["path"] == "/v1/plans/last-used/scheduled_transactions/st1"
+
+
+def test_scheduled_transaction_tools_without_token_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_scheduled_transactions())
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_scheduled_transaction("st1"))
+
+
 def test_get_transaction_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     captured = _patch_client(
         monkeypatch, lambda r: httpx.Response(200, json={"data": {"transaction": _TXN}})

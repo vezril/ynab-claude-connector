@@ -149,6 +149,20 @@ class Transaction:
     category_id: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class ScheduledTransaction:
+    id: str
+    date_first: str
+    date_next: str
+    frequency: str
+    amount: int  # milliunits
+    account_id: str
+    payee_id: str | None
+    category_id: str | None
+    memo: str | None
+    deleted: bool
+
+
 def _data(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     """Return the inner ``data`` object from a YNAB response envelope."""
     data = payload.get("data", {})
@@ -378,3 +392,30 @@ def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:
 def parse_transaction(payload: Mapping[str, Any]) -> Transaction:
     # `transaction` and its `id` are required: a malformed body raises.
     return _transaction_from(_data(payload)["transaction"])
+
+
+def _scheduled_transaction_from(item: Mapping[str, Any]) -> ScheduledTransaction:
+    return ScheduledTransaction(
+        id=item["id"],
+        date_first=item["date_first"],
+        date_next=item["date_next"],
+        frequency=item["frequency"],
+        amount=int(item["amount"]),
+        account_id=item["account_id"],
+        payee_id=item.get("payee_id"),
+        category_id=item.get("category_id"),
+        memo=item.get("memo"),
+        deleted=bool(item.get("deleted", False)),
+    )
+
+
+def parse_scheduled_transactions(
+    payload: Mapping[str, Any],
+) -> tuple[ScheduledTransaction, ...]:
+    items = _data(payload).get("scheduled_transactions", []) or []
+    return tuple(_scheduled_transaction_from(item) for item in items)
+
+
+def parse_scheduled_transaction(payload: Mapping[str, Any]) -> ScheduledTransaction:
+    # `scheduled_transaction` and its `id` are required: a malformed body raises.
+    return _scheduled_transaction_from(_data(payload)["scheduled_transaction"])

@@ -26,6 +26,7 @@ from ynab_claude_connector.ynab.models import (
     Plan,
     PlanDetailSummary,
     PlanSettings,
+    ScheduledTransaction,
     Transaction,
     User,
     parse_accounts,
@@ -42,6 +43,8 @@ from ynab_claude_connector.ynab.models import (
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
+    parse_scheduled_transaction,
+    parse_scheduled_transactions,
     parse_transaction,
     parse_transactions,
     parse_user,
@@ -210,6 +213,22 @@ class YnabClient:
     ) -> tuple[Transaction, ...]:
         return parse_transactions(
             await self._get(f"plans/{plan_id}/months/{month}/transactions")
+        )
+
+    async def list_scheduled_transactions(
+        self, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[ScheduledTransaction, ...]:
+        return parse_scheduled_transactions(
+            await self._get(f"plans/{plan_id}/scheduled_transactions")
+        )
+
+    async def get_scheduled_transaction(
+        self, scheduled_transaction_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> ScheduledTransaction:
+        return parse_scheduled_transaction(
+            await self._get(
+                f"plans/{plan_id}/scheduled_transactions/{scheduled_transaction_id}"
+            )
         )
 
 
