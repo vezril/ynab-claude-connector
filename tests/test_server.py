@@ -44,6 +44,10 @@ def test_build_server_registers_all_tools() -> None:
         "list_payee_locations_for_payee",
         "list_months",
         "get_month",
+        "list_money_movements",
+        "list_money_movements_for_month",
+        "list_money_movement_groups",
+        "list_money_movement_groups_for_month",
         "list_transactions",
     }
 

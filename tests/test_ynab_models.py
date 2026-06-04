@@ -8,6 +8,8 @@ from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
     parse_category,
+    parse_money_movement_groups,
+    parse_money_movements,
     parse_month,
     parse_months,
     parse_payee,
@@ -131,6 +133,76 @@ def test_parse_payees() -> None:
         ("py1", "Market", None),
         ("py2", "Transfer", "a9"),
     ]
+
+
+def test_parse_money_movements() -> None:
+    movements = parse_money_movements(
+        {
+            "data": {
+                "money_movements": [
+                    {
+                        "id": "mm1",
+                        "month": "2026-06-01",
+                        "moved_at": "2026-06-02T10:00:00Z",
+                        "note": "reallocate",
+                        "money_movement_group_id": "mmg1",
+                        "performed_by_user_id": "u1",
+                        "from_category_id": "c1",
+                        "to_category_id": "c2",
+                        "amount": -25000,
+                    }
+                ]
+            }
+        }
+    )
+    assert len(movements) == 1
+    mv = movements[0]
+    assert mv.id == "mm1"
+    assert mv.month == "2026-06-01"
+    assert mv.from_category_id == "c1"
+    assert mv.to_category_id == "c2"
+    assert mv.money_movement_group_id == "mmg1"
+    assert mv.amount == -25000
+
+
+def test_parse_money_movement_minimal() -> None:
+    mv = parse_money_movements(
+        {"data": {"money_movements": [{"id": "mm2", "amount": 100}]}}
+    )[0]
+    assert mv.id == "mm2"
+    assert mv.amount == 100
+    assert mv.month is None
+    assert mv.note is None
+    assert mv.from_category_id is None
+
+
+def test_parse_money_movement_groups() -> None:
+    groups = parse_money_movement_groups(
+        {
+            "data": {
+                "money_movement_groups": [
+                    {
+                        "id": "mmg1",
+                        "group_created_at": "2026-06-02T10:00:00Z",
+                        "month": "2026-06-01",
+                        "note": "june moves",
+                        "performed_by_user_id": "u1",
+                    }
+                ]
+            }
+        }
+    )
+    assert len(groups) == 1
+    g = groups[0]
+    assert g.id == "mmg1"
+    assert g.month == "2026-06-01"
+    assert g.note == "june moves"
+    assert g.performed_by_user_id == "u1"
+
+
+def test_parse_money_movements_empty() -> None:
+    assert parse_money_movements({"data": {"money_movements": []}}) == ()
+    assert parse_money_movement_groups({"data": {"money_movement_groups": []}}) == ()
 
 
 def test_parse_months() -> None:

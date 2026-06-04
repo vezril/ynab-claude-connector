@@ -18,6 +18,8 @@ from ynab_claude_connector.ynab.errors import YnabAuthError, error_from_response
 from ynab_claude_connector.ynab.models import (
     Account,
     Category,
+    MoneyMovement,
+    MoneyMovementGroup,
     Month,
     Payee,
     PayeeLocation,
@@ -29,6 +31,8 @@ from ynab_claude_connector.ynab.models import (
     parse_accounts,
     parse_categories,
     parse_category,
+    parse_money_movement_groups,
+    parse_money_movements,
     parse_month,
     parse_months,
     parse_payee,
@@ -138,6 +142,34 @@ class YnabClient:
 
     async def get_month(self, month: str, plan_id: str = _DEFAULT_PLAN) -> Month:
         return parse_month(await self._get(f"plans/{plan_id}/months/{month}"))
+
+    async def list_money_movements(
+        self, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[MoneyMovement, ...]:
+        return parse_money_movements(
+            await self._get(f"plans/{plan_id}/money_movements")
+        )
+
+    async def list_money_movements_for_month(
+        self, month: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[MoneyMovement, ...]:
+        return parse_money_movements(
+            await self._get(f"plans/{plan_id}/months/{month}/money_movements")
+        )
+
+    async def list_money_movement_groups(
+        self, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[MoneyMovementGroup, ...]:
+        return parse_money_movement_groups(
+            await self._get(f"plans/{plan_id}/money_movement_groups")
+        )
+
+    async def list_money_movement_groups_for_month(
+        self, month: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[MoneyMovementGroup, ...]:
+        return parse_money_movement_groups(
+            await self._get(f"plans/{plan_id}/months/{month}/money_movement_groups")
+        )
 
     async def list_transactions(
         self, plan_id: str = _DEFAULT_PLAN
