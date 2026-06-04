@@ -22,6 +22,7 @@ from ynab_claude_connector.ynab.tools import (
     get_payee_location,
     get_plan,
     get_plan_settings,
+    get_scheduled_transaction,
     get_transaction,
     get_user,
     list_accounts,
@@ -35,6 +36,7 @@ from ynab_claude_connector.ynab.tools import (
     list_payee_locations_for_payee,
     list_payees,
     list_plans,
+    list_scheduled_transactions,
     list_transactions,
     list_transactions_by_account,
     list_transactions_by_category,
@@ -72,6 +74,8 @@ _TOOLS: Final = (
     list_transactions_by_category,
     list_transactions_by_payee,
     list_transactions_by_month,
+    list_scheduled_transactions,
+    get_scheduled_transaction,
 )
 
 

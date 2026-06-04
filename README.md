@@ -150,6 +150,8 @@ ynab-claude-connector
 | `list_transactions_by_category` | `category_id`, `plan_id` (default `last-used`) | A category's transactions         |
 | `list_transactions_by_payee` | `payee_id`, `plan_id` (default `last-used`) | A payee's transactions               |
 | `list_transactions_by_month` | `month`, `plan_id` (default `last-used`) | A month's transactions                   |
+| `list_scheduled_transactions` | `plan_id` (default `last-used`) | Scheduled (recurring/upcoming) transactions |
+| `get_scheduled_transaction` | `scheduled_transaction_id`, `plan_id` (default `last-used`) | A single scheduled transaction by id |
 
 > **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
 > so the tools use plan terminology (`list_plans`, `plan_id`). `plan_id` defaults to YNAB's
@@ -236,7 +238,8 @@ tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_set
 `list_money_movements_for_month`, `list_money_movement_groups`,
 `list_money_movement_groups_for_month`, `list_transactions`, `get_transaction`,
 `list_transactions_by_account`, `list_transactions_by_category`,
-`list_transactions_by_payee`, and `list_transactions_by_month`. Try asking *"List my YNAB
+`list_transactions_by_payee`, `list_transactions_by_month`,
+`list_scheduled_transactions`, and `get_scheduled_transaction`. Try asking *"List my YNAB
 plans"* or *"Show my transactions for this month"*.
 
 ### Troubleshooting

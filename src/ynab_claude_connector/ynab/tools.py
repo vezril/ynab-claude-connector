@@ -23,6 +23,7 @@ from ynab_claude_connector.ynab.models import (
     Plan,
     PlanDetailSummary,
     PlanSettings,
+    ScheduledTransaction,
     Transaction,
     User,
 )
@@ -210,3 +211,19 @@ async def list_transactions_by_month(
     """List a month's transactions (`month` is `current` or an ISO `YYYY-MM-01`)."""
     async with client_from_env(_config()) as client:
         return await client.list_transactions_by_month(month, plan_id)
+
+
+async def list_scheduled_transactions(
+    plan_id: str = _DEFAULT_PLAN,
+) -> tuple[ScheduledTransaction, ...]:
+    """List scheduled (recurring/upcoming) transactions for a plan."""
+    async with client_from_env(_config()) as client:
+        return await client.list_scheduled_transactions(plan_id)
+
+
+async def get_scheduled_transaction(
+    scheduled_transaction_id: str, plan_id: str = _DEFAULT_PLAN
+) -> ScheduledTransaction:
+    """Return a single scheduled transaction by id (defaults to last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_scheduled_transaction(scheduled_transaction_id, plan_id)

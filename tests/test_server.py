@@ -54,6 +54,8 @@ def test_build_server_registers_all_tools() -> None:
         "list_transactions_by_category",
         "list_transactions_by_payee",
         "list_transactions_by_month",
+        "list_scheduled_transactions",
+        "get_scheduled_transaction",
     }
 
 
