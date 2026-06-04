@@ -36,6 +36,7 @@ Features (minimal, more features to be added later, this is just to get started)
 9. Implementation of all endpoints under the "Months" Category
 10. Implementation of all endpoints under the "Money Movements" Category
 11. Implementation of all endpoints under the "Transactions" Category
+12. Implementation of all endpoints under the "Scheduled Transactions" Category
 
 More features to come.
 
