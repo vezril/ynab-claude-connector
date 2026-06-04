@@ -170,3 +170,43 @@ async def list_transactions(
     """List transactions for a plan (defaults to last-used)."""
     async with client_from_env(_config()) as client:
         return await client.list_transactions(plan_id)
+
+
+async def get_transaction(
+    transaction_id: str, plan_id: str = _DEFAULT_PLAN
+) -> Transaction:
+    """Return a single transaction by id (defaults to the last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_transaction(transaction_id, plan_id)
+
+
+async def list_transactions_by_account(
+    account_id: str, plan_id: str = _DEFAULT_PLAN
+) -> tuple[Transaction, ...]:
+    """List a specific account's transactions (defaults to last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_transactions_by_account(account_id, plan_id)
+
+
+async def list_transactions_by_category(
+    category_id: str, plan_id: str = _DEFAULT_PLAN
+) -> tuple[Transaction, ...]:
+    """List a specific category's transactions (defaults to last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_transactions_by_category(category_id, plan_id)
+
+
+async def list_transactions_by_payee(
+    payee_id: str, plan_id: str = _DEFAULT_PLAN
+) -> tuple[Transaction, ...]:
+    """List a specific payee's transactions (defaults to last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_transactions_by_payee(payee_id, plan_id)
+
+
+async def list_transactions_by_month(
+    month: str, plan_id: str = _DEFAULT_PLAN
+) -> tuple[Transaction, ...]:
+    """List a month's transactions (`month` is `current` or an ISO `YYYY-MM-01`)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_transactions_by_month(month, plan_id)

@@ -42,6 +42,7 @@ from ynab_claude_connector.ynab.models import (
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
+    parse_transaction,
     parse_transactions,
     parse_user,
 )
@@ -175,6 +176,41 @@ class YnabClient:
         self, plan_id: str = _DEFAULT_PLAN
     ) -> tuple[Transaction, ...]:
         return parse_transactions(await self._get(f"plans/{plan_id}/transactions"))
+
+    async def get_transaction(
+        self, transaction_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> Transaction:
+        return parse_transaction(
+            await self._get(f"plans/{plan_id}/transactions/{transaction_id}")
+        )
+
+    async def list_transactions_by_account(
+        self, account_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[Transaction, ...]:
+        return parse_transactions(
+            await self._get(f"plans/{plan_id}/accounts/{account_id}/transactions")
+        )
+
+    async def list_transactions_by_category(
+        self, category_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[Transaction, ...]:
+        return parse_transactions(
+            await self._get(f"plans/{plan_id}/categories/{category_id}/transactions")
+        )
+
+    async def list_transactions_by_payee(
+        self, payee_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[Transaction, ...]:
+        return parse_transactions(
+            await self._get(f"plans/{plan_id}/payees/{payee_id}/transactions")
+        )
+
+    async def list_transactions_by_month(
+        self, month: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[Transaction, ...]:
+        return parse_transactions(
+            await self._get(f"plans/{plan_id}/months/{month}/transactions")
+        )
 
 
 def _safe_json(response: httpx.Response) -> dict[str, object]:

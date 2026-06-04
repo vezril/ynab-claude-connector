@@ -197,6 +197,54 @@ _CATEGORY_RESPONSE = {
 }
 
 
+_TXN = {
+    "id": "t1",
+    "date": "2026-06-01",
+    "amount": -100,
+    "cleared": "cleared",
+    "approved": True,
+    "account_id": "a1",
+}
+
+
+def test_get_transaction_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch, lambda r: httpx.Response(200, json={"data": {"transaction": _TXN}})
+    )
+    txn = asyncio.run(tools.get_transaction("t1"))
+    assert txn.id == "t1"
+    assert captured["path"] == "/v1/plans/last-used/transactions/t1"
+
+
+def test_scoped_transaction_list_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured = _patch_client(
+        monkeypatch,
+        lambda r: httpx.Response(200, json={"data": {"transactions": [_TXN]}}),
+    )
+
+    assert len(asyncio.run(tools.list_transactions_by_account("a1"))) == 1
+    assert captured["path"] == "/v1/plans/last-used/accounts/a1/transactions"
+
+    asyncio.run(tools.list_transactions_by_category("c1"))
+    assert captured["path"] == "/v1/plans/last-used/categories/c1/transactions"
+
+    asyncio.run(tools.list_transactions_by_payee("py1"))
+    assert captured["path"] == "/v1/plans/last-used/payees/py1/transactions"
+
+    asyncio.run(tools.list_transactions_by_month("current"))
+    assert captured["path"] == "/v1/plans/last-used/months/current/transactions"
+
+
+def test_transaction_lookup_tools_without_token_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_transaction("t1"))
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_transactions_by_month("current"))
+
+
 def test_money_movement_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if "money_movement_groups" in request.url.path:

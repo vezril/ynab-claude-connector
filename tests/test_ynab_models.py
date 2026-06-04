@@ -19,6 +19,7 @@ from ynab_claude_connector.ynab.models import (
     parse_plan_detail_summary,
     parse_plan_settings,
     parse_plans,
+    parse_transaction,
     parse_transactions,
     parse_user,
 )
@@ -378,6 +379,37 @@ def test_parse_categories_flattens_groups() -> None:
     assert category.budgeted == 1000000
     assert category.activity == -1000000
     assert category.balance == 0
+
+
+def test_parse_transaction_single() -> None:
+    txn = parse_transaction(
+        {
+            "data": {
+                "transaction": {
+                    "id": "t1",
+                    "date": "2026-06-01",
+                    "amount": -54320,
+                    "memo": "Groceries",
+                    "cleared": "cleared",
+                    "approved": True,
+                    "payee_name": "Market",
+                    "category_id": "c1",
+                    "account_id": "a1",
+                }
+            }
+        }
+    )
+    assert txn.id == "t1"
+    assert txn.amount == -54320
+    assert txn.payee_name == "Market"
+    assert txn.account_id == "a1"
+
+
+def test_parse_transaction_missing_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_transaction({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_transaction({"data": {"transaction": {}}})
 
 
 def test_parse_transactions() -> None:
