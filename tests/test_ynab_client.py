@@ -165,6 +165,57 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_payee_location_paths() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        if request.url.path.endswith("/payee_locations/pl1"):
+            return httpx.Response(
+                200,
+                json={"data": {"payee_location": {"id": "pl1", "payee_id": "py1"}}},
+            )
+        return httpx.Response(
+            200,
+            json={"data": {"payee_locations": [{"id": "pl1", "payee_id": "py1"}]}},
+        )
+
+    async def run_list() -> int:
+        async with _client(handler) as client:
+            return len(await client.list_payee_locations())
+
+    assert asyncio.run(run_list()) == 1
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/payee_locations"
+
+    async def run_get() -> str:
+        async with _client(handler) as client:
+            return (await client.get_payee_location("pl1")).payee_id
+
+    assert asyncio.run(run_get()) == "py1"
+    assert captured["path"] == "/v1/plans/last-used/payee_locations/pl1"
+
+    async def run_for_payee() -> int:
+        async with _client(handler) as client:
+            return len(await client.list_payee_locations_for_payee("py1"))
+
+    assert asyncio.run(run_for_payee()) == 1
+    assert captured["path"] == "/v1/plans/last-used/payees/py1/payee_locations"
+
+
+def test_get_payee_location_404() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run() -> None:
+        async with _client(handler) as client:
+            await client.get_payee_location("missing")
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run())
+
+
 def test_list_payees_path_and_parse() -> None:
     captured: dict[str, str] = {}
 

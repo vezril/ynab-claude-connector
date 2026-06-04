@@ -197,6 +197,43 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_payee_location_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/payee_locations/pl1"):
+            return httpx.Response(
+                200, json={"data": {"payee_location": {"id": "pl1", "payee_id": "py1"}}}
+            )
+        return httpx.Response(
+            200, json={"data": {"payee_locations": [{"id": "pl1", "payee_id": "py1"}]}}
+        )
+
+    captured = _patch_client(monkeypatch, handler)
+
+    locs = asyncio.run(tools.list_payee_locations())
+    assert locs[0].id == "pl1"
+    assert captured["path"] == "/v1/plans/last-used/payee_locations"
+
+    loc = asyncio.run(tools.get_payee_location("pl1"))
+    assert loc.payee_id == "py1"
+    assert captured["path"] == "/v1/plans/last-used/payee_locations/pl1"
+
+    for_payee = asyncio.run(tools.list_payee_locations_for_payee("py1"))
+    assert len(for_payee) == 1
+    assert captured["path"] == "/v1/plans/last-used/payees/py1/payee_locations"
+
+
+def test_payee_location_tools_without_token_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_payee_locations())
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.get_payee_location("pl1"))
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_payee_locations_for_payee("py1"))
+
+
 def test_list_payees_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     captured = _patch_client(
         monkeypatch,

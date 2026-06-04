@@ -9,6 +9,8 @@ from ynab_claude_connector.ynab.models import (
     parse_categories,
     parse_category,
     parse_payee,
+    parse_payee_location,
+    parse_payee_locations,
     parse_payees,
     parse_plan_detail_summary,
     parse_plan_settings,
@@ -127,6 +129,53 @@ def test_parse_payees() -> None:
         ("py1", "Market", None),
         ("py2", "Transfer", "a9"),
     ]
+
+
+def test_parse_payee_locations() -> None:
+    locations = parse_payee_locations(
+        {
+            "data": {
+                "payee_locations": [
+                    {
+                        "id": "pl1",
+                        "payee_id": "py1",
+                        "latitude": "40.7128",
+                        "longitude": "-74.0060",
+                        "deleted": False,
+                    }
+                ]
+            }
+        }
+    )
+    assert len(locations) == 1
+    loc = locations[0]
+    assert loc.id == "pl1"
+    assert loc.payee_id == "py1"
+    assert loc.latitude == "40.7128"
+    assert loc.longitude == "-74.0060"
+    assert loc.deleted is False
+
+
+def test_parse_payee_location_single() -> None:
+    loc = parse_payee_location(
+        {"data": {"payee_location": {"id": "pl1", "payee_id": "py1"}}}
+    )
+    assert loc.id == "pl1"
+    assert loc.payee_id == "py1"
+    assert loc.latitude is None
+    assert loc.longitude is None
+    assert loc.deleted is False
+
+
+def test_parse_payee_locations_empty() -> None:
+    assert parse_payee_locations({"data": {"payee_locations": []}}) == ()
+
+
+def test_parse_payee_location_missing_fields_raises() -> None:
+    with pytest.raises((KeyError, TypeError)):
+        parse_payee_location({"data": {}})
+    with pytest.raises((KeyError, TypeError)):
+        parse_payee_location({"data": {"payee_location": {}}})
 
 
 def test_parse_payee_single() -> None:

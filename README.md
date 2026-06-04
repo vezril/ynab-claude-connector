@@ -135,6 +135,9 @@ ynab-claude-connector
 | `get_month_category`| `month`, `category_id`, `plan_id` (default `last-used`) | A category's values for a month (`month` accepts `current` or `YYYY-MM-01`) |
 | `list_payees`       | `plan_id` (default `last-used`)    | Payees (id, name, transfer account, deleted)         |
 | `get_payee`         | `payee_id`, `plan_id` (default `last-used`) | A single payee by id                        |
+| `list_payee_locations` | `plan_id` (default `last-used`) | Payee locations (id, payee, lat/long)              |
+| `get_payee_location` | `payee_location_id`, `plan_id` (default `last-used`) | A single payee location by id     |
+| `list_payee_locations_for_payee` | `payee_id`, `plan_id` (default `last-used`) | Locations for a specific payee       |
 | `list_transactions` | `plan_id` (default `last-used`)    | Transactions (date, amount, payee, category, memo)   |
 
 > **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
@@ -217,8 +220,9 @@ Notes:
 Fully quit and reopen it (the config is read at startup). The connector then appears in the
 tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_settings`,
 `list_accounts`, `list_categories`, `get_category`, `get_month_category`, `list_payees`,
-`get_payee`, and `list_transactions`. Try asking *"List my YNAB plans"* or *"What are my
-account balances?"*.
+`get_payee`, `list_payee_locations`, `get_payee_location`,
+`list_payee_locations_for_payee`, and `list_transactions`. Try asking *"List my YNAB
+plans"* or *"What are my account balances?"*.
 
 ### Troubleshooting
 

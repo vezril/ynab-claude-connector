@@ -16,6 +16,7 @@ from ynab_claude_connector.ynab.models import (
     Account,
     Category,
     Payee,
+    PayeeLocation,
     Plan,
     PlanDetailSummary,
     PlanSettings,
@@ -90,6 +91,30 @@ async def get_payee(payee_id: str, plan_id: str = _DEFAULT_PLAN) -> Payee:
     """Return a single payee by id (defaults to the last-used plan)."""
     async with client_from_env(_config()) as client:
         return await client.get_payee(payee_id, plan_id)
+
+
+async def list_payee_locations(
+    plan_id: str = _DEFAULT_PLAN,
+) -> tuple[PayeeLocation, ...]:
+    """List all payee locations for a plan (defaults to last-used)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_payee_locations(plan_id)
+
+
+async def get_payee_location(
+    payee_location_id: str, plan_id: str = _DEFAULT_PLAN
+) -> PayeeLocation:
+    """Return a single payee location by id (defaults to the last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.get_payee_location(payee_location_id, plan_id)
+
+
+async def list_payee_locations_for_payee(
+    payee_id: str, plan_id: str = _DEFAULT_PLAN
+) -> tuple[PayeeLocation, ...]:
+    """List payee locations for a specific payee (defaults to last-used plan)."""
+    async with client_from_env(_config()) as client:
+        return await client.list_payee_locations_for_payee(payee_id, plan_id)
 
 
 async def list_transactions(

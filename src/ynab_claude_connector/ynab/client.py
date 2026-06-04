@@ -19,6 +19,7 @@ from ynab_claude_connector.ynab.models import (
     Account,
     Category,
     Payee,
+    PayeeLocation,
     Plan,
     PlanDetailSummary,
     PlanSettings,
@@ -28,6 +29,8 @@ from ynab_claude_connector.ynab.models import (
     parse_categories,
     parse_category,
     parse_payee,
+    parse_payee_location,
+    parse_payee_locations,
     parse_payees,
     parse_plan_detail_summary,
     parse_plan_settings,
@@ -105,6 +108,27 @@ class YnabClient:
 
     async def get_payee(self, payee_id: str, plan_id: str = _DEFAULT_PLAN) -> Payee:
         return parse_payee(await self._get(f"plans/{plan_id}/payees/{payee_id}"))
+
+    async def list_payee_locations(
+        self, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[PayeeLocation, ...]:
+        return parse_payee_locations(
+            await self._get(f"plans/{plan_id}/payee_locations")
+        )
+
+    async def get_payee_location(
+        self, payee_location_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> PayeeLocation:
+        return parse_payee_location(
+            await self._get(f"plans/{plan_id}/payee_locations/{payee_location_id}")
+        )
+
+    async def list_payee_locations_for_payee(
+        self, payee_id: str, plan_id: str = _DEFAULT_PLAN
+    ) -> tuple[PayeeLocation, ...]:
+        return parse_payee_locations(
+            await self._get(f"plans/{plan_id}/payees/{payee_id}/payee_locations")
+        )
 
     async def list_transactions(
         self, plan_id: str = _DEFAULT_PLAN
