@@ -115,6 +115,28 @@ class Month:
 
 
 @dataclass(frozen=True, slots=True)
+class MoneyMovement:
+    id: str
+    month: str | None
+    moved_at: str | None
+    note: str | None
+    money_movement_group_id: str | None
+    performed_by_user_id: str | None
+    from_category_id: str | None
+    to_category_id: str | None
+    amount: int  # milliunits
+
+
+@dataclass(frozen=True, slots=True)
+class MoneyMovementGroup:
+    id: str
+    group_created_at: str | None
+    month: str | None
+    note: str | None
+    performed_by_user_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class Transaction:
     id: str
     date: str
@@ -296,6 +318,42 @@ def parse_months(payload: Mapping[str, Any]) -> tuple[Month, ...]:
 def parse_month(payload: Mapping[str, Any]) -> Month:
     # `month` object (and its `month` id) is required: a malformed body raises.
     return _month_from(_data(payload)["month"])
+
+
+def _money_movement_from(item: Mapping[str, Any]) -> MoneyMovement:
+    return MoneyMovement(
+        id=item["id"],
+        month=item.get("month"),
+        moved_at=item.get("moved_at"),
+        note=item.get("note"),
+        money_movement_group_id=item.get("money_movement_group_id"),
+        performed_by_user_id=item.get("performed_by_user_id"),
+        from_category_id=item.get("from_category_id"),
+        to_category_id=item.get("to_category_id"),
+        amount=int(item["amount"]),
+    )
+
+
+def _money_movement_group_from(item: Mapping[str, Any]) -> MoneyMovementGroup:
+    return MoneyMovementGroup(
+        id=item["id"],
+        group_created_at=item.get("group_created_at"),
+        month=item.get("month"),
+        note=item.get("note"),
+        performed_by_user_id=item.get("performed_by_user_id"),
+    )
+
+
+def parse_money_movements(payload: Mapping[str, Any]) -> tuple[MoneyMovement, ...]:
+    movements = _data(payload).get("money_movements", []) or []
+    return tuple(_money_movement_from(item) for item in movements)
+
+
+def parse_money_movement_groups(
+    payload: Mapping[str, Any],
+) -> tuple[MoneyMovementGroup, ...]:
+    groups = _data(payload).get("money_movement_groups", []) or []
+    return tuple(_money_movement_group_from(item) for item in groups)
 
 
 def parse_transactions(payload: Mapping[str, Any]) -> tuple[Transaction, ...]:

@@ -165,6 +165,53 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_money_movement_paths() -> None:
+    captured: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["path"] = request.url.path
+        captured["auth"] = request.headers.get("authorization", "")
+        if "money_movement_groups" in request.url.path:
+            return httpx.Response(
+                200, json={"data": {"money_movement_groups": [{"id": "g1"}]}}
+            )
+        return httpx.Response(
+            200, json={"data": {"money_movements": [{"id": "m1", "amount": 1}]}}
+        )
+
+    async def n(coro_name: str, *args: str) -> int:
+        async with _client(handler) as client:
+            return len(await getattr(client, coro_name)(*args))
+
+    assert asyncio.run(n("list_money_movements")) == 1
+    assert captured["auth"] == "Bearer test-token"
+    assert captured["path"] == "/v1/plans/last-used/money_movements"
+
+    asyncio.run(n("list_money_movements_for_month", "current"))
+    assert captured["path"] == "/v1/plans/last-used/months/current/money_movements"
+
+    asyncio.run(n("list_money_movement_groups"))
+    assert captured["path"] == "/v1/plans/last-used/money_movement_groups"
+
+    asyncio.run(n("list_money_movement_groups_for_month", "2026-06-01"))
+    assert (
+        captured["path"]
+        == "/v1/plans/last-used/months/2026-06-01/money_movement_groups"
+    )
+
+
+def test_list_money_movements_404() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"error": {"detail": "nope"}})
+
+    async def run() -> None:
+        async with _client(handler) as client:
+            await client.list_money_movements()
+
+    with pytest.raises(YnabApiError):
+        asyncio.run(run())
+
+
 def test_list_months_and_get_month_paths() -> None:
     captured: dict[str, str] = {}
 

@@ -25,6 +25,10 @@ from ynab_claude_connector.ynab.tools import (
     get_user,
     list_accounts,
     list_categories,
+    list_money_movement_groups,
+    list_money_movement_groups_for_month,
+    list_money_movements,
+    list_money_movements_for_month,
     list_months,
     list_payee_locations,
     list_payee_locations_for_payee,
@@ -53,6 +57,10 @@ _TOOLS: Final = (
     list_payee_locations_for_payee,
     list_months,
     get_month,
+    list_money_movements,
+    list_money_movements_for_month,
+    list_money_movement_groups,
+    list_money_movement_groups_for_month,
     list_transactions,
 )
 

@@ -197,6 +197,44 @@ _CATEGORY_RESPONSE = {
 }
 
 
+def test_money_movement_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "money_movement_groups" in request.url.path:
+            return httpx.Response(
+                200, json={"data": {"money_movement_groups": [{"id": "g1"}]}}
+            )
+        return httpx.Response(
+            200, json={"data": {"money_movements": [{"id": "m1", "amount": 1}]}}
+        )
+
+    captured = _patch_client(monkeypatch, handler)
+
+    assert len(asyncio.run(tools.list_money_movements())) == 1
+    assert captured["path"] == "/v1/plans/last-used/money_movements"
+
+    asyncio.run(tools.list_money_movements_for_month("current"))
+    assert captured["path"] == "/v1/plans/last-used/months/current/money_movements"
+
+    assert len(asyncio.run(tools.list_money_movement_groups())) == 1
+    assert captured["path"] == "/v1/plans/last-used/money_movement_groups"
+
+    asyncio.run(tools.list_money_movement_groups_for_month("2026-06-01"))
+    assert (
+        captured["path"]
+        == "/v1/plans/last-used/months/2026-06-01/money_movement_groups"
+    )
+
+
+def test_money_movement_tools_without_token_raise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("YNAB_TOKEN", raising=False)
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_money_movements())
+    with pytest.raises(YnabAuthError, match="YNAB_TOKEN"):
+        asyncio.run(tools.list_money_movement_groups_for_month("current"))
+
+
 def test_month_tools(monkeypatch: pytest.MonkeyPatch) -> None:
     month_obj = {
         "month": "2026-06-01",

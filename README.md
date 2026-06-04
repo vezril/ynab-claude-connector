@@ -140,6 +140,10 @@ ynab-claude-connector
 | `list_payee_locations_for_payee` | `payee_id`, `plan_id` (default `last-used`) | Locations for a specific payee       |
 | `list_months`       | `plan_id` (default `last-used`)    | Month summaries (income, budgeted, activity, age of money) |
 | `get_month`         | `month`, `plan_id` (default `last-used`) | A single month (`month` accepts `current` or `YYYY-MM-01`) |
+| `list_money_movements` | `plan_id` (default `last-used`) | Money movements (category budget reallocations)    |
+| `list_money_movements_for_month` | `month`, `plan_id` (default `last-used`) | Money movements for a month         |
+| `list_money_movement_groups` | `plan_id` (default `last-used`) | Money movement groups                         |
+| `list_money_movement_groups_for_month` | `month`, `plan_id` (default `last-used`) | Money movement groups for a month |
 | `list_transactions` | `plan_id` (default `last-used`)    | Transactions (date, amount, payee, category, memo)   |
 
 > **Terminology:** YNAB renamed "budgets" to **plans**; the API serves these under `/plans`,
@@ -223,8 +227,10 @@ Fully quit and reopen it (the config is read at startup). The connector then app
 tools menu, exposing `ping`, `get_user`, `list_plans`, `get_plan`, `get_plan_settings`,
 `list_accounts`, `list_categories`, `get_category`, `get_month_category`, `list_payees`,
 `get_payee`, `list_payee_locations`, `get_payee_location`,
-`list_payee_locations_for_payee`, `list_months`, `get_month`, and `list_transactions`. Try
-asking *"List my YNAB plans"* or *"What are my account balances?"*.
+`list_payee_locations_for_payee`, `list_months`, `get_month`, `list_money_movements`,
+`list_money_movements_for_month`, `list_money_movement_groups`,
+`list_money_movement_groups_for_month`, and `list_transactions`. Try asking *"List my YNAB
+plans"* or *"What are my account balances?"*.
 
 ### Troubleshooting
 
